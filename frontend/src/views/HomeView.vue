@@ -66,6 +66,7 @@ h1 {
   max-width: 1200px;
   line-height: 1.2;
   margin-bottom: 14px;
+  margin-top: 20px;
 }
 
 .subtitle {

@@ -137,7 +137,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 20px 60px;
+  padding: 30px 20px 60px;
 }
 
 h1 {
