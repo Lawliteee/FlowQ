@@ -1,6 +1,8 @@
 <template>
   <header>
-    <img class="logo" src="/logo.svg" alt="FlowQ logo" />
+    <router-link to="/" class="logo-link">
+      <img class="logo" src="/logo.svg" alt="FlowQ logo" />
+    </router-link>
     <span class="header-title">FlowQ</span>
     <nav class="header-nav">
       <a href="#">Войти</a>
@@ -19,11 +21,16 @@ header {
   height: 70px;
 }
 
+.logo-link {
+  display: block;
+  line-height: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
 .logo {
   height: 50px;
   width: auto;
-  display: block;
-  z-index: 1;
 }
 
 .header-title {

@@ -124,7 +124,6 @@ const createQueue = () => {
     swapPositions: swapPositions.value,
     admins: admins.value
   })
-  
   router.push('/queue') // просто переход на страницу очереди
 }
 
