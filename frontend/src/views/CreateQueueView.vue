@@ -65,11 +65,18 @@
         <span class="form-label">Администраторы</span>
         <div class="form-control">
           <div class="admin-row">
-            <input type="text" class="form-input" placeholder="Добавьте администраторов..." v-model="adminInput" @keyup.enter="addAdmin" />
+            <input
+              type="text"
+              class="form-input"
+              placeholder="Добавьте администраторов..."
+              v-model="adminInput"
+              @keyup.enter="addAdmin"
+            />
             <button class="btn-add" @click="addAdmin">+</button>
           </div>
           <div v-if="admins.length > 0" class="admin-list">
-            <span v-for="(admin, idx) in admins" :key="idx" class="admin-tag"> {{ admin }}
+            <span v-for="(admin, idx) in admins" :key="idx" class="admin-tag">
+              {{ admin }}
               <button @click="removeAdmin(idx)" class="remove-admin">&times;</button>
             </span>
           </div>
@@ -83,8 +90,6 @@
     </section>
   </main>
 </template>
-
-
 
 <script setup>
 import { ref } from 'vue'
@@ -122,14 +127,11 @@ const createQueue = () => {
     anonymousChat: anonymousChat.value,
     systemNotifications: systemNotifications.value,
     swapPositions: swapPositions.value,
-    admins: admins.value
+    admins: admins.value,
   })
   router.push('/queue') // просто переход на страницу очереди
 }
-
 </script>
-
-
 
 <style scoped>
 main {
@@ -266,7 +268,7 @@ h1 {
   color: var(--text);
 }
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   width: 17px;
   height: 17px;
   accent-color: var(--primary-dark);
@@ -374,5 +376,4 @@ input[type="checkbox"] {
   opacity: 0.5;
   pointer-events: none;
 }
-
 </style>

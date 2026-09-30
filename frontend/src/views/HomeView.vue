@@ -1,7 +1,9 @@
 <template>
   <main>
     <h1>Управляйте очередями без хаоса и потери времени</h1>
-    <p class="subtitle">FlowQ — гибкая система виртуальных очередей с чатом, обменом местами и приоритетами</p>
+    <p class="subtitle">
+      FlowQ — гибкая система виртуальных очередей с чатом, обменом местами и приоритетами
+    </p>
 
     <section class="role-section">
       <h2>Выберите роль:</h2>
@@ -12,7 +14,9 @@
         </div>
         <div class="role-card">
           <span class="role-label">Организатор</span>
-          <button class="btn-primary2" @click="router.push('/create-queue')">Создать очередь</button>
+          <button class="btn-primary2" @click="router.push('/create-queue')">
+            Создать очередь
+          </button>
         </div>
       </div>
     </section>
@@ -27,8 +31,6 @@
   </div>
 </template>
 
-
-
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -36,7 +38,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const modalOpen = ref(false) // Открыто ли окно
-const queueLink = ref('')    // Ссылка, котору. ввел пользователь
+const queueLink = ref('') // Ссылка, котору. ввел пользователь
 
 function openModal() {
   modalOpen.value = true
@@ -107,7 +109,8 @@ h1 {
   color: var(--text);
 }
 
-.btn-primary1, .btn-primary2 {
+.btn-primary1,
+.btn-primary2 {
   background: var(--primary-dark);
   color: white;
   border: none;
@@ -125,7 +128,8 @@ h1 {
   padding: 14px 40px;
 }
 
-.btn-primary1:hover, .btn-primary2:hover {
+.btn-primary1:hover,
+.btn-primary2:hover {
   background: var(--primary-hover);
 }
 
@@ -135,7 +139,7 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
