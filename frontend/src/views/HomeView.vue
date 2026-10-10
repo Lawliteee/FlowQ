@@ -1,8 +1,8 @@
 <template>
   <main>
-    <h1>Управляйте очередями без хаоса и потери времени</h1>
+    <h1>Управляйте очередями без хаоса и потери времени!</h1>
     <p class="subtitle">
-      FlowQ — гибкая система виртуальных очередей с чатом, обменом местами и приоритетами
+      FlowQ - гибкая система виртуальных очередей с чатом, обменом местами и приоритетами
     </p>
 
     <section class="role-section">
@@ -75,7 +75,7 @@ h1 {
   font-size: 16px;
   color: var(--text-muted);
   font-weight: 400;
-  max-width: 520px;
+  max-width: 360px;
   line-height: 1.6;
   margin-bottom: 92px;
 }
