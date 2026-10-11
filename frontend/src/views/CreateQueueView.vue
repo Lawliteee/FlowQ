@@ -142,7 +142,7 @@ const createQueue = async () => {
     // Переходим на страницу очереди
     router.push(`/queue/${response.data.id}`)
   } catch (error) {
-    alert('Не удалось создать очередь')
+    alert('Не удалось создать очередь: ' + error)
   }
 }
 </script>
