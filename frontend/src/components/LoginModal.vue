@@ -20,7 +20,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref } from 'vue'
 
@@ -95,14 +94,14 @@ h3 {
   font-family: 'Fira Sans', sans-serif;
   font-size: 15px;
   color: var(--text);
-  background: #f5f5f5;
+  background: #ebeaea;
   box-sizing: border-box;
   transition: border-color 0.18s;
 }
 
 .modal-input:focus {
   outline: none;
-  border-color: var(--teal);
+  border-color: var(--primary-hover);
   background: white;
 }
 
