@@ -1,6 +1,5 @@
 <template>
   <div class="admin-page">
-
     <!-- Верхняя панель -->
     <div class="queue-bar">
       <span class="queue-name">{{ queue.name }}</span>
@@ -15,7 +14,9 @@
       </div>
       <div class="current-participant-info">
         <span class="participant-name">{{ currentParticipant?.name ?? '—' }}</span>
-        <span class="participant-priority">Приоритет {{ currentParticipant?.priority ?? '-' }}</span>
+        <span class="participant-priority"
+          >Приоритет {{ currentParticipant?.priority ?? '-' }}</span
+        >
       </div>
     </div>
 
@@ -30,9 +31,7 @@
         <span class="p-number">{{ idx + 1 }}.</span>
         <span class="p-name">{{ p.name }}</span>
       </div>
-      <div v-if="queue.participants.length === 0" class="empty-list">
-        Участников пока нет
-      </div>
+      <div v-if="queue.participants.length === 0" class="empty-list">Участников пока нет</div>
     </div>
 
     <!-- кнопки внизу -->
@@ -42,7 +41,6 @@
       <button class="btn-secondary" @click="finishQueue">Завершить очередь</button>
     </div>
   </div>
-
 </template>
 
 <script setup>
@@ -58,7 +56,7 @@ const queue = ref({
   name: '',
   startTime: '',
   currentNumber: 1,
-  participants: []
+  participants: [],
 })
 
 const currentParticipant = computed(() => {
@@ -80,7 +78,7 @@ onMounted(async () => {
       name: data.name,
       startTime: data.startTime || '12:00',
       currentNumber: data.currentNumber || 1,
-      participants: data.participants || []
+      participants: data.participants || [],
     }
   } catch (error) {
     console.error('Ошибка загрузки очереди:', error)
@@ -236,7 +234,7 @@ function finishQueue() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   flex-shrink: 0;
   margin-top: auto;
 }
@@ -251,7 +249,7 @@ function finishQueue() {
   font-weight: 600;
   cursor: pointer;
   font-family: 'Fira Sans', sans-serif;
-  transition: background 0.20s;
+  transition: background 0.2s;
   white-space: nowrap;
 }
 
@@ -260,12 +258,12 @@ function finishQueue() {
 }
 
 .btn-next {
-  background: var(--teal-dark);
+  background: var(--primary-button);
   color: white;
   border: none;
   border-radius: 12px;
   padding: 12px 36px;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
   font-family: 'Fira Sans', sans-serif;
@@ -274,6 +272,6 @@ function finishQueue() {
 }
 
 .btn-next:hover {
-  background: var(--teal);
+  background: var(--primary-button-hover);
 }
 </style>
