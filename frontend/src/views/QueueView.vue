@@ -1,5 +1,9 @@
 <template>
   <div class="page-body">
+    <button class="burger-btn" @click="openParticipants" title="Список участников">
+      <img src="/icons/burger.png" alt="меню" width="22" height="22" />
+    </button>
+
     <section class="queue-info">
       <h2 class="queue-title">{{ queueTitle }}</h2>
     </section>
@@ -41,6 +45,11 @@ onMounted(async () => {
 const leaveQueue = () => {
   router.push('/')
 }
+
+// TODO
+function openParticipants() {
+  // список участников
+}
 </script>
 
 <style scoped>
@@ -50,11 +59,37 @@ const leaveQueue = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
+
+/* Список участников */
+.burger-btn {
+  position: absolute;
+  top: 0px;
+  right: 24px;
+  width: 46px;
+  height: 46px;
+  background: var(--panel);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.burger-btn:hover {
+  background: #cfcfcf;
+}
+
+/* --------------------------- */
 
 .queue-info {
   text-align: center;
   margin-bottom: 60px;
+  margin-top: -60px;
 }
 
 .queue-title {
