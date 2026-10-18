@@ -150,4 +150,20 @@ h3 {
 .switch-text a:hover {
   text-decoration: underline;
 }
+
+@media (max-width: 768px) {
+  .modal {
+    padding: 16px;
+  }
+
+  .modal-content {
+    padding: 32px 20px 24px;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .modal-btn {
+    width: 100%;
+  }
+}
 </style>
