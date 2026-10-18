@@ -390,4 +390,59 @@ input[type='checkbox'] {
   opacity: 0.5;
   pointer-events: none;
 }
+
+@media (max-width: 768px) {
+  main {
+    padding: 20px 22px 40px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+
+  .form-panel {
+    padding: 4px 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .form-label {
+    min-width: 0;
+    padding-top: 0;
+  }
+
+  .form-control {
+    flex: none;
+  }
+
+  .inline-fields,
+  .priority-row,
+  .checkbox-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .inline-fields {
+    align-items: stretch;
+  }
+
+  .inline-field {
+    justify-content: space-between;
+  }
+
+  .ml {
+    margin-left: 0;
+  }
+
+  .btn-back,
+  .btn-create {
+    flex: 1;
+    padding: 14px 0;
+  }
+}
 </style>

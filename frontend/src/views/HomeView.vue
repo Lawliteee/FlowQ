@@ -115,4 +115,49 @@ h1 {
 .btn-primary2:hover {
   background: var(--primary-hover);
 }
+
+@media (max-width: 1024px) {
+  main {
+    padding: 50px 20px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 768px) {
+  main {
+    padding: 30px 16px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    margin-bottom: 48px;
+  }
+
+  .role-section h2 {
+    font-size: 24px;
+  }
+
+  /* карточки ролей друг под другом */
+  .role-cards {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .role-card {
+    padding: 0;
+  }
+
+  .role-card + .role-card {
+    border-left: none;
+    border-top: 2px solid var(--divider);
+    padding-top: 24px;
+  }
+}
 </style>

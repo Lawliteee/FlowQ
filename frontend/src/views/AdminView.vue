@@ -173,12 +173,12 @@ function finishQueue() {
 }
 
 .btn-copy--copied {
-  background: var(--teal-dark);
+  background: var(--primary-dark);
   color: white;
 }
 
 .btn-copy--copied:hover {
-  background: var(--teal);
+  background: var(--primary-hover);
 }
 
 .current-block {
@@ -317,5 +317,51 @@ function finishQueue() {
 
 .btn-next:hover {
   background: var(--primary-button-hover);
+}
+
+@media (max-width: 1024px) {
+  .admin-page {
+    padding: 0 32px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-page {
+    padding: 0 16px 24px;
+    height: auto;
+    max-height: none;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .queue-bar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .current-text {
+    font-size: 26px;
+  }
+
+  .current-number {
+    font-size: 38px;
+  }
+
+  .participants-panel {
+    flex: none;
+    min-height: 200px;
+    max-height: 45vh;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 0;
+  }
+
+  .btn-next {
+    order: -1;
+  }
 }
 </style>

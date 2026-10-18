@@ -132,4 +132,22 @@ function openParticipants() {
 .btn-leave:hover {
   background: var(--primary-hover);
 }
+
+@media (max-width: 768px) {
+  .page-body {
+    padding: 0 16px;
+  }
+
+  .burger-btn {
+    right: 12px;
+  }
+
+  .queue-title {
+    font-size: 24px;
+  }
+
+  .wait-time {
+    font-size: 28px;
+  }
+}
 </style>

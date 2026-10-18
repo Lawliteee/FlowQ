@@ -10,12 +10,7 @@
     </nav>
   </header>
 
-
-  <LoginModal
-    v-if="loginOpen"
-    @close="loginOpen = false"
-    @switch-to-register="switchToRegister"
-  />
+  <LoginModal v-if="loginOpen" @close="loginOpen = false" @switch-to-register="switchToRegister" />
 
   <RegisterModal
     v-if="registerOpen"
@@ -102,5 +97,35 @@ header {
 }
 .header-nav a:hover {
   opacity: 0.7;
+}
+
+@media (max-width: 1024px) {
+  header {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 0 12px;
+  }
+
+  .logo {
+    height: 40px;
+  }
+
+  .header-title {
+    position: static;
+    transform: none;
+    font-size: 18px;
+  }
+
+  .header-nav {
+    gap: 10px;
+  }
+
+  .header-nav a {
+    font-size: 13px;
+  }
 }
 </style>
