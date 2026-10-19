@@ -16,9 +16,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+
+let pollTimer = null
 
 const route = useRoute()
 const router = useRouter()
@@ -28,19 +30,26 @@ const waitTime = ref(0)
 const peopleAhead = ref(0)
 
 onMounted(async () => {
+  await fetchQueue() // загружаем данные
+  pollTimer = setInterval(fetchQueue, 3000) // устанавливаем таймер на 3 секунды
+})
+
+onUnmounted(() => clearInterval(pollTimer)) // останавливаем таймер при уходе со страницы
+
+async function fetchQueue() {
   const queueId = route.params.id
   try {
     const response = await axios.get(`http://localhost:8080/api/queues/${queueId}`)
     const data = response.data
     queueTitle.value = data.name
-
     waitTime.value = data.waitTime || 0
     peopleAhead.value = data.peopleAhead || 0
   } catch (error) {
+    clearInterval(pollTimer)
     alert('Очередь не найдена: ' + error)
     router.push('/')
   }
-})
+}
 
 const leaveQueue = () => {
   router.push('/')
