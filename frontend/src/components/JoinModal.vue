@@ -52,7 +52,15 @@ async function submitQueue() {
   errorMsg.value = ''
 
   try {
-    // Отправляем запрос на вступление
+    // Сначала проверяем статус очереди
+    const check = await axios.get(`http://localhost:8080/api/queues/${id}`)
+    if (check.data.finished) {
+      errorMsg.value = 'Эта очередь уже завершена'
+      loading.value = false
+      return
+    }
+
+    // Вступаем и сохраняем response
     const response = await axios.post(`http://localhost:8080/api/queues/${id}/join`, {
       name: userName.value.trim(),
     })
