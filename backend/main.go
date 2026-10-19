@@ -9,7 +9,12 @@ import (
 )
 
 func main() {
-	store := NewStore()
+	db := NewDB()
+	defer db.Close()
+
+	RunMigrations(db)
+
+	store := NewStore(db)
 	handler := NewHandler(store)
 
 	r := mux.NewRouter()
@@ -32,9 +37,7 @@ func main() {
 		AllowCredentials: true,
 	})
 
-	handlerWithCORS := c.Handler(r)
-
 	port := ":8080"
 	log.Printf("Сервер запущен на http://localhost%s", port)
-	log.Fatal(http.ListenAndServe(port, handlerWithCORS))
+	log.Fatal(http.ListenAndServe(port, c.Handler(r)))
 }
