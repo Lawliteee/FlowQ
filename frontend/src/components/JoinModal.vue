@@ -1,0 +1,178 @@
+<template>
+  <div class="modal" @click.self="$emit('close')">
+    <div class="modal-content">
+      <h3>Вступить в очередь</h3>
+      <div class="input-group">
+        <input v-model="userName" type="text" class="modal-input" placeholder="Ваше имя" />
+        <input
+          v-model="queueId"
+          type="text"
+          class="modal-input"
+          placeholder="Идентификатор очереди"
+        />
+      </div>
+      <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+      <button
+        class="modal-btn"
+        :disabled="!canSubmit || loading"
+        :class="{ 'modal-btn--disabled': !canSubmit || loading }"
+        @click="submitQueue"
+      >
+        Вступить
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+
+const emit = defineEmits(['close'])
+const router = useRouter()
+
+const userName = ref('')
+const queueId = ref('')
+const loading = ref(false)
+const errorMsg = ref('')
+
+// Проверяется возможность перехода в очередь (если поля заполнены)
+const canSubmit = computed(() => userName.value.trim() !== '' && queueId.value.trim() !== '')
+
+// Переход в очередь
+async function submitQueue() {
+  if (!canSubmit.value || loading.value) return
+
+  // Если вставили полную ссылку - извлекаем ID
+  const raw = queueId.value.trim()
+  const id = raw.includes('/') ? raw.split('/').filter(Boolean).pop() : raw
+
+  loading.value = true
+  errorMsg.value = ''
+
+  try {
+    // Отправляем запрос на вступление
+    await axios.post(`http://localhost:8080/api/queues/${id}/join`, {
+      name: userName.value.trim(),
+    })
+    router.push(`/queue/${id}`)
+    emit('close')
+  } catch (err) {
+    errorMsg.value =
+      err.response.status === 404
+        ? 'Очередь не найдена. Проверьте идентификатор.'
+        : 'Не удалось вступить в очередь'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style>
+/* Модальное окно */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal-content {
+  background: white;
+  padding: 35px;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.modal-content h3 {
+  font-size: 21px;
+  font-weight: 400;
+  margin-bottom: 18px;
+  color: var(--text);
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+  font-family: 'Fira Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  box-sizing: border-box;
+  transition: border-color 0.18s;
+}
+
+.modal-input::placeholder {
+  color: #aaa;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--primary-dark);
+}
+
+.error-msg {
+  font-size: 13px;
+  color: #e05252;
+  margin-bottom: 14px;
+}
+
+.modal-btn {
+  background: var(--primary-dark);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  width: 60%;
+  font-family: 'Fira Sans', sans-serif;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    opacity 0.18s;
+}
+
+.modal-btn:hover:not(.modal-btn--disabled) {
+  background: var(--primary-hover);
+}
+
+.modal-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .modal {
+    padding: 16px;
+  }
+
+  .modal-content {
+    padding: 32px 20px 24px;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .modal-btn {
+    width: 100%;
+  }
+}
+</style>
