@@ -53,14 +53,15 @@ async function submitQueue() {
 
   try {
     // Отправляем запрос на вступление
-    await axios.post(`http://localhost:8080/api/queues/${id}/join`, {
+    const response = await axios.post(`http://localhost:8080/api/queues/${id}/join`, {
       name: userName.value.trim(),
     })
+    sessionStorage.setItem('participantId', response.data.participantId)
     router.push(`/queue/${id}`)
     emit('close')
   } catch (err) {
     errorMsg.value =
-      err.response.status === 404
+      err.response?.status === 404
         ? 'Очередь не найдена. Проверьте идентификатор.'
         : 'Не удалось вступить в очередь'
   } finally {
