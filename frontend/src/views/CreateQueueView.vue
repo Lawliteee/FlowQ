@@ -4,16 +4,20 @@
 
     <section class="form-panel">
       <div class="form-row first-row">
-        <span class="form-label">Название очереди</span>
+        <label class="form-label" for="queueName">Название очереди</label>
         <div class="form-control">
-          <input type="text" class="form-input" placeholder="" v-model="queueName" />
+          <input id="queueName" type="text" class="form-input" v-model="queueName" />
         </div>
       </div>
 
       <div class="form-row">
-        <span class="form-label">Описание</span>
+        <label class="form-label" for="description">Описание</label>
         <div class="form-control">
-          <textarea class="form-input form-textarea" v-model="description"></textarea>
+          <textarea
+            id="description"
+            class="form-input form-textarea"
+            v-model="description"
+          ></textarea>
         </div>
       </div>
 
@@ -111,12 +115,18 @@ const swapPositions = ref(false)
 const adminInput = ref('')
 const admins = ref([])
 
+// Возвращает на главную старницу
 const goBack = () => {
   router.push('/')
 }
 
+// Создает очередь
 const createQueue = async () => {
   try {
+    if (!queueName.value.trim()) {
+      alert('Введите название очереди')
+      return
+    }
     const payload = {
       // Объект с данными
       queueName: queueName.value,
@@ -134,7 +144,6 @@ const createQueue = async () => {
 
     // Отправляем Post запрос
     const response = await axios.post('http://localhost:8080/api/queues', payload)
-    const { link } = response.data
 
     // Показываем ссылку пользователю через alert
     alert(`Очередь создана!\nИдентификатор для участников: ${response.data.id}`)
