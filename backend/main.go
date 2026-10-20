@@ -1,35 +1,43 @@
 package main
 
 import (
-  "log"
-  "net/http"
+	"log"
+	"net/http"
 
-  "github.com/gorilla/mux"
-  "github.com/rs/cors"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
-  store := NewStore()
-  handler := NewHandler(store)
+	db := NewDB()
+	defer db.Close()
 
-  r := mux.NewRouter()
+	RunMigrations(db) // создаёт таблицы, если их нет
 
-  // API маршруты
-  api := r.PathPrefix("/api").Subrouter()
-  api.HandleFunc("/queues", handler.CreateQueue).Methods("POST")
-  api.HandleFunc("/queues/{id}", handler.GetQueue).Methods("GET")
+	store := NewStore(db)
+	handler := NewHandler(store)
 
-  // Настройка CORS (чтобы фронт на другом порту мог обращаться)
-  c := cors.New(cors.Options{
-    AllowedOrigins:   []string{"http://localhost:5173"}, // порт Vite по умолчанию
-    AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
-    AllowedHeaders:   []string{"Content-Type"},
-    AllowCredentials: true,
-  })
+	r := mux.NewRouter()
 
-  handlerWithCORS := c.Handler(r)
+	api := r.PathPrefix("/api").Subrouter()
 
-  port := ":8080"
-  log.Printf("Сервер запущен на http://localhost%s", port)
-  log.Fatal(http.ListenAndServe(port, handlerWithCORS))
+	// Очереди
+	api.HandleFunc("/queues", handler.CreateQueue).Methods("POST")
+	api.HandleFunc("/queues/{id}", handler.GetQueue).Methods("GET")
+	api.HandleFunc("/queues/{id}/join", handler.JoinQueue).Methods("POST")
+
+	// Админ
+	api.HandleFunc("/admin/queues/{id}/next", handler.CallNext).Methods("POST")
+	api.HandleFunc("/admin/queues/{id}/finish", handler.FinishQueue).Methods("POST")
+
+	c := cors.New(cors.Options{ // CORS для локального фронтенда (Vite)
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type"},
+		AllowCredentials: true,
+	})
+
+	port := ":8080"
+	log.Printf("Сервер запущен на http://localhost%s", port)
+	log.Fatal(http.ListenAndServe(port, c.Handler(r)))
 }
