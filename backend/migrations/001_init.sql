@@ -1,4 +1,4 @@
--- SmartQueue: начальная схема
+-- FlowQ: начальная схема
 
 CREATE TABLE IF NOT EXISTS queues (
     id                   TEXT PRIMARY KEY,

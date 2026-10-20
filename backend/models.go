@@ -5,7 +5,7 @@ import "time"
 type Participant struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
-	Priority int    `json:"priority"`
+	Priority int    `json:"priority"` // 0 — обычный, >0 — приоритетный
 }
 
 type Queue struct {
@@ -16,14 +16,14 @@ type Queue struct {
 	MaxParticipants     int           `json:"maxParticipants"`
 	HasPriority         bool          `json:"hasPriority"`
 	PriorityCount       int           `json:"priorityCount"`
-	InitialPriority     int           `json:"initialPriority"`
+	InitialPriority     int           `json:"initialPriority"` // стартовое значение приоритета для новых участников
 	AnonymousChat       bool          `json:"anonymousChat"`
 	SystemNotifications bool          `json:"systemNotifications"`
 	SwapPositions       bool          `json:"swapPositions"`
 	Admins              []string      `json:"admins"`
 	CreatedAt           time.Time     `json:"createdAt"`
 	Participants        []Participant `json:"participants"`
-	CurrentNumber       int           `json:"currentNumber"`
+	CurrentNumber       int           `json:"currentNumber"` // номер последнего вызванного
 	Finished            bool          `json:"finished"`
 }
 

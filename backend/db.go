@@ -10,11 +10,10 @@ import (
 
 // NewDB открывает соединение с PostgreSQL.
 // Строка подключения берётся из переменной окружения DATABASE_URL.
-// Пример: postgres://user:password@localhost:5432/smartqueue?sslmode=disable
 func NewDB() *sql.DB {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://postgres:postgres@localhost:5432/smartqueue?sslmode=disable"
+		dsn = "postgres://postgres:postgres@localhost:5432/flowq?sslmode=disable"
 	}
 
 	db, err := sql.Open("pgx", dsn)
