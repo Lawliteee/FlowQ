@@ -17,7 +17,7 @@ func NewHandler(store *Store) *Handler {
 	return &Handler{store: store}
 }
 
-// POST /api/queues – создание очереди
+// CreateQueue создаёт очередь и возвращает ссылку для вступления.
 func (h *Handler) CreateQueue(w http.ResponseWriter, r *http.Request) {
 	var req CreateQueueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

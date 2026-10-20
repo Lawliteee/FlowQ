@@ -69,7 +69,7 @@ func (s *Store) Get(id string) (*Queue, bool) {
 	if err == sql.ErrNoRows {
 		return nil, false
 	}
-	if err != nil {
+	if err != nil { // Ошибки чтения админов/участников не фатальны — очередь возвращается частично.
 		log.Printf("Ошибка получения очереди %s: %v", id, err)
 		return nil, false
 	}
@@ -108,7 +108,7 @@ func (s *Store) Get(id string) (*Queue, bool) {
 	return queue, true
 }
 
-// AddParticipant добавляет участника в очередь.
+// AddParticipant добавляет участника; ошибки только логируются (fire-and-forget).
 func (s *Store) AddParticipant(queueID string, p Participant) {
 	_, err := s.db.Exec(`
 		INSERT INTO participants (id, queue_id, name, priority, joined_at)

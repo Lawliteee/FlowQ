@@ -12,7 +12,7 @@ func main() {
 	db := NewDB()
 	defer db.Close()
 
-	RunMigrations(db)
+	RunMigrations(db) // создаёт таблицы, если их нет
 
 	store := NewStore(db)
 	handler := NewHandler(store)
@@ -30,7 +30,7 @@ func main() {
 	api.HandleFunc("/admin/queues/{id}/next", handler.CallNext).Methods("POST")
 	api.HandleFunc("/admin/queues/{id}/finish", handler.FinishQueue).Methods("POST")
 
-	c := cors.New(cors.Options{
+	c := cors.New(cors.Options{ // CORS для локального фронтенда (Vite)
 		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type"},
