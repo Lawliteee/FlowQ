@@ -11,7 +11,14 @@
       <p v-if="waitTime === -1" class="your-turn">Ваша очередь!</p>
       <p v-else class="wait-time">Осталось ждать: {{ waitTime }} мин.</p>
       <p class="ahead-count">Перед вами: {{ peopleAhead }} чел.</p>
-      <button class="btn-leave" @click="leaveQueue">Покинуть очередь</button>
+      <button
+        class="btn-leave"
+        :disabled="waitTime === -1"
+        :class="{ 'btn-leave--disabled': waitTime === -1 }"
+        @click="leaveQueue"
+      >
+        Покинуть очередь
+      </button>
     </section>
   </div>
 </template>
@@ -174,6 +181,11 @@ function openParticipants() {
   font-weight: 700;
   color: var(--primary-dark);
   margin-bottom: 8px;
+}
+
+.btn-leave--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
