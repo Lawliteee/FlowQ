@@ -51,7 +51,13 @@ async function fetchQueue() {
   }
 }
 
-const leaveQueue = () => {
+async function leaveQueue() {
+  const participantId = sessionStorage.getItem('participantId')
+  const queueId = route.params.id
+  if (participantId) {
+    await axios.delete(`http://localhost:8080/api/queues/${queueId}/participants/${participantId}`)
+    sessionStorage.removeItem('participantId')
+  }
   router.push('/')
 }
 
