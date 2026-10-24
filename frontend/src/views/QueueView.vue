@@ -39,7 +39,7 @@ const peopleAhead = ref(0)
 
 onMounted(async () => {
   await fetchQueue() // загружаем данные
-  pollTimer = setInterval(fetchQueue, 3000) // устанавливаем таймер на 3 секунды
+  pollTimer = setInterval(fetchQueue, 2000) // устанавливаем таймер на 3 секунды
 })
 
 onUnmounted(() => clearInterval(pollTimer)) // останавливаем таймер при уходе со страницы

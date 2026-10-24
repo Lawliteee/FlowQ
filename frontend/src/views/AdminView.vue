@@ -100,7 +100,7 @@ function copyId() {
     copied.value = true
     setTimeout(() => {
       copied.value = false
-    }, 2000)
+    }, 1500)
   }
 }
 
