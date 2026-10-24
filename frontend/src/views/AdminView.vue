@@ -110,6 +110,7 @@ async function callNext() {
   )
   queue.value.currentNumber = response.data.currentNumber
   queue.value.participants = response.data.participant
+  queue.value.currentParticipant = response.data.currentParticipant ?? null
 }
 
 async function finishQueue() {
