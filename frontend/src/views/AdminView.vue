@@ -64,13 +64,8 @@ const queue = ref({
   participants: [],
 })
 
-const currentParticipant = computed(() => {
-  // Текущий участник - первый в списке
-  if (queue.value.participants && queue.value.participants.length > 0) {
-    return queue.value.participants[0]
-  }
-  return null
-})
+// Текущий участник
+const currentParticipant = computed(() => queue.value.currentParticipant ?? null)
 
 onMounted(async () => {
   await fetchQueue()
@@ -91,6 +86,7 @@ async function fetchQueue() {
       startTime: data.startTime || '12:00',
       currentNumber: data.currentNumber || 1,
       participants: data.participants || [],
+      currentParticipant: data.currentParticipant || null,
     }
   } catch (error) {
     console.error('Ошибка загрузки:', error)
