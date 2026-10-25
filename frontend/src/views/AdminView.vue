@@ -5,7 +5,7 @@
       <span class="queue-name">{{ queue.name }}</span>
       <span class="queue-time">начало: {{ queue.startTime }}</span>
       <button class="btn-copy" :class="{ 'btn-copy--copied': copied }" @click="copyId">
-        {{ copied ? 'Скопировано' : 'Скопировать ID' }}
+        <span class="btn-text">{{ copied ? 'Скопировано' : 'Скопировать ID' }}</span>
       </button>
     </div>
 
@@ -166,9 +166,9 @@ async function finishQueue() {
   font-weight: 600;
   cursor: pointer;
   font-family: 'Fira Sans', sans-serif;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  min-width: 130px;
+  text-align: center;
+  transition: background 0.20s, color 0.20s;
   white-space: nowrap;
 }
 
@@ -179,10 +179,16 @@ async function finishQueue() {
 .btn-copy--copied {
   background: var(--primary-dark);
   color: white;
+  text-align: center;
 }
 
 .btn-copy--copied:hover {
   background: var(--primary-hover);
+}
+
+.btn-text {
+  display: inline-block;
+  width: 100%;
 }
 
 .current-block {
