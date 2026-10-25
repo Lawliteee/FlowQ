@@ -69,7 +69,7 @@ const currentParticipant = computed(() => queue.value.currentParticipant ?? null
 
 onMounted(async () => {
   await fetchQueue()
-  pollTimer = setInterval(fetchQueue, 3000)
+  pollTimer = setInterval(fetchQueue, 1200)
 })
 
 onUnmounted(() => clearInterval(pollTimer))
@@ -104,6 +104,7 @@ function copyId() {
   }
 }
 
+// Вызываем следующего участника
 async function callNext() {
   const response = await axios.post(
     `http://localhost:8080/api/admin/queues/${route.params.id}/next`,
@@ -113,6 +114,7 @@ async function callNext() {
   queue.value.currentParticipant = response.data.currentParticipant ?? null
 }
 
+// Завершаем очередь
 async function finishQueue() {
   await axios.post(`http://localhost:8080/api/admin/queues/${route.params.id}/finish`)
   router.push('/')

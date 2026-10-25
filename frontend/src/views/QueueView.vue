@@ -39,7 +39,7 @@ const peopleAhead = ref(0)
 
 onMounted(async () => {
   await fetchQueue() // загружаем данные
-  pollTimer = setInterval(fetchQueue, 2000) // устанавливаем таймер на 3 секунды
+  pollTimer = setInterval(fetchQueue, 2000) // устанавливаем таймер на 2 секунды
 })
 
 onUnmounted(() => clearInterval(pollTimer)) // останавливаем таймер при уходе со страницы
@@ -58,10 +58,10 @@ async function fetchQueue() {
     const myId = sessionStorage.getItem('participantId')
     const cp = data.currentParticipant
 
-    // Если текущий вызванный - это я
+    // Если текущий вызванный - я
     if (cp && cp.id === myId) {
       queueTitle.value = data.name
-      waitTime.value = -1 // специальный флаг "вызван"
+      waitTime.value = -1 // флаг "вызван"
       peopleAhead.value = 0
       return
     }
@@ -70,7 +70,7 @@ async function fetchQueue() {
     const myPos = data.participants.findIndex((p) => p.id === myId)
 
     if (myPos === -1) {
-      // если нет в очереди, значит выгнали
+      // если нет в очереди значит выгнали
       sessionStorage.removeItem('participantId')
       router.push('/')
       return
@@ -79,7 +79,7 @@ async function fetchQueue() {
     queueTitle.value = data.name
     peopleAhead.value = myPos === -1 ? 0 : myPos
     waitTime.value = myPos === -1 ? 0 : myPos * 5
-  } catch (error) {
+  } catch {
     clearInterval(pollTimer)
     router.push('/')
   }
