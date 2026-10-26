@@ -24,6 +24,7 @@
 </template>
 
 <script setup>
+import { getCookie, removeCookie } from '../utils/cookies.js'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
@@ -55,7 +56,7 @@ async function fetchQueue() {
       return
     }
 
-    const myId = sessionStorage.getItem('participantId')
+    const myId = getCookie('participantId')
     const cp = data.currentParticipant
 
     // Если текущий вызванный - я
@@ -71,7 +72,7 @@ async function fetchQueue() {
 
     if (myPos === -1) {
       // если нет в очереди значит выгнали
-      sessionStorage.removeItem('participantId')
+      removeCookie('participantId')
       router.push('/')
       return
     }
@@ -86,12 +87,12 @@ async function fetchQueue() {
 }
 
 async function leaveQueue() {
-  const participantId = sessionStorage.getItem('participantId')
+  const participantId = getCookie('participantId')
   if (participantId) {
     await axios.delete(
       `http://localhost:8080/api/queues/${route.params.id}/participants/${participantId}`,
     )
-    sessionStorage.removeItem('participantId')
+    removeCookie('participantId')
   }
   router.push('/')
 }
