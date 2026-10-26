@@ -92,15 +92,20 @@
       <button class="btn-back" @click="goBack">Назад</button>
       <button class="btn-create" @click="createQueue">Создать</button>
     </section>
+
+    <QueueCreatedModal v-if="createdQueueId" :queueId="createdQueueId" @close="router.push(`/admin/${createdQueueId}`)"/>
   </main>
 </template>
 
 <script setup>
+import QueueCreatedModal from '../components/QueueCreatedModal.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const router = useRouter()
+
+const createdQueueId = ref(null)
 
 const queueName = ref('')
 const description = ref('')
@@ -145,11 +150,7 @@ const createQueue = async () => {
     // Отправляем Post запрос
     const response = await axios.post('http://localhost:8080/api/queues', payload)
 
-    // Показываем ссылку пользователю через alert
-    alert(`Очередь создана!\nИдентификатор для участников: ${response.data.id}`)
-
-    // Переходим на страницу администратора
-    router.push(`/admin/${response.data.id}`)
+    createdQueueId.value = response.data.id // Модальное окно с идентификатором
   } catch (error) {
     alert('Не удалось создать очередь: ' + error)
   }
