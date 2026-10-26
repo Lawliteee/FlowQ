@@ -20,16 +20,20 @@
         Покинуть очередь
       </button>
     </section>
+
+    <QueueFinishedModal v-if="showFinished" @confirm="onFinishedConfirm"/>
   </div>
 </template>
 
 <script setup>
 import { getCookie, removeCookie } from '../utils/cookies.js'
+import QueueFinishedModal from '../components/QueueFinishedModal.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 
 let pollTimer = null
+const showFinished = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -51,9 +55,7 @@ async function fetchQueue() {
     const response = await axios.get(`http://localhost:8080/api/queues/${queueId}`)
     const data = response.data
     if (data.finished) {
-      alert('Очередь завершена')
-      router.push('/')
-      return
+      showFinished.value = true
     }
 
     const myId = getCookie('participantId')
@@ -100,6 +102,11 @@ async function leaveQueue() {
 // TODO
 function openParticipants() {
   // список участников
+}
+
+function onFinishedConfirm() {
+  showFinished.value = false
+  router.push('/')
 }
 </script>
 
