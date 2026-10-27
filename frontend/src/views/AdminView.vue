@@ -361,6 +361,10 @@ async function finishQueue() {
   .admin-page {
     padding: 0 32px 40px;
   }
+
+  .chat-btn {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
