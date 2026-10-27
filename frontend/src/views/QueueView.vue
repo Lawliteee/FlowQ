@@ -1,5 +1,10 @@
 <template>
   <div class="page-body">
+
+    <button class="chat-btn" title="Чат">
+      <img src="/icons/chat.png" alt="чат" width="30" height="30" />
+    </button>
+
     <button class="burger-btn" @click="openParticipants" title="Список участников">
       <img src="/icons/burger.png" alt="меню" width="22" height="22" />
     </button>
@@ -141,6 +146,25 @@ function onFinishedConfirm() {
 .burger-btn:hover {
   background: #cfcfcf;
 }
+
+.chat-btn {
+  position: absolute;
+  top: 0px;
+  left: 24px;
+  width: 46px;
+  height: 46px;
+  background: var(--panel);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.20s;
+  flex-shrink: 0;
+}
+
+.chat-btn:hover { background: #cfcfcf; }
 
 /* --------------------------- */
 
