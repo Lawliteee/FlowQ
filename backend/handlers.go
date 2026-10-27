@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -72,6 +73,19 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+		
+	// Читаем текущего участника
+    var currentParticipant *Participant
+    var cpID, cpName sql.NullString
+    h.store.db.QueryRow(`
+        SELECT current_participant_id, current_participant_name
+        FROM queues WHERE id = $1`, id,
+    ).Scan(&cpID, &cpName)
+    if cpID.Valid && cpID.String != "" {
+        currentParticipant = &Participant{ID: cpID.String, Name: cpName.String}
+    }
+
+
 	type QueueInfo struct {
 		ID            string        `json:"id"`
 		Name          string        `json:"name"`
@@ -81,6 +95,7 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		PeopleAhead   int           `json:"peopleAhead"`
 		WaitTime      int           `json:"waitTime"`
 		Finished      bool          `json:"finished"`
+		CurrentParticipant *Participant `json:"currentParticipant"`
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -93,6 +108,7 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		PeopleAhead:   len(queue.Participants),
 		WaitTime:      len(queue.Participants) * 5, // заглушка: 5 мин на человека
 		Finished:      queue.Finished,
+		CurrentParticipant: currentParticipant,
 	})
 }
 
@@ -174,4 +190,11 @@ func (h *Handler) FinishQueue(w http.ResponseWriter, r *http.Request) {
 
 	h.store.FinishQueue(id)
 	w.WriteHeader(http.StatusOK)
+}
+
+
+func (h *Handler) LeaveQueue(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    h.store.RemoveParticipant(vars["id"], vars["participantId"])
+    w.WriteHeader(http.StatusOK)
 }
