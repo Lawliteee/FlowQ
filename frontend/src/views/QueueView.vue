@@ -8,17 +8,32 @@
       <h2 class="queue-title">{{ queueTitle }}</h2>
     </section>
     <section class="content">
-      <p class="wait-time">Осталось ждать: {{ waitTime }} мин.</p>
+      <p v-if="waitTime === -1" class="your-turn">Ваша очередь!</p>
+      <p v-else class="wait-time">Осталось ждать: {{ waitTime }} мин.</p>
       <p class="ahead-count">Перед вами: {{ peopleAhead }} чел.</p>
-      <button class="btn-leave" @click="leaveQueue">Покинуть очередь</button>
+      <button
+        class="btn-leave"
+        :disabled="waitTime === -1"
+        :class="{ 'btn-leave--disabled': waitTime === -1 }"
+        @click="leaveQueue"
+      >
+        Покинуть очередь
+      </button>
     </section>
+
+    <QueueFinishedModal v-if="showFinished" @confirm="onFinishedConfirm"/>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { getCookie, removeCookie } from '../utils/cookies.js'
+import QueueFinishedModal from '../components/QueueFinishedModal.vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+
+let pollTimer = null
+const showFinished = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -28,27 +43,70 @@ const waitTime = ref(0)
 const peopleAhead = ref(0)
 
 onMounted(async () => {
+  await fetchQueue() // загружаем данные
+  pollTimer = setInterval(fetchQueue, 2000) // устанавливаем таймер на 2 секунды
+})
+
+onUnmounted(() => clearInterval(pollTimer)) // останавливаем таймер при уходе со страницы
+
+async function fetchQueue() {
   const queueId = route.params.id
   try {
     const response = await axios.get(`http://localhost:8080/api/queues/${queueId}`)
     const data = response.data
-    queueTitle.value = data.name
+    if (data.finished) {
+      showFinished.value = true
+    }
 
-    waitTime.value = data.waitTime || 0
-    peopleAhead.value = data.peopleAhead || 0
-  } catch (error) {
-    alert('Очередь не найдена: ' + error)
+    const myId = getCookie('participantId')
+    const cp = data.currentParticipant
+
+    // Если текущий вызванный - я
+    if (cp && cp.id === myId) {
+      queueTitle.value = data.name
+      waitTime.value = -1 // флаг "вызван"
+      peopleAhead.value = 0
+      return
+    }
+
+    // Моя позиция в очереди ожидания
+    const myPos = data.participants.findIndex((p) => p.id === myId)
+
+    if (myPos === -1) {
+      // если нет в очереди значит выгнали
+      removeCookie('participantId')
+      router.push('/')
+      return
+    }
+
+    queueTitle.value = data.name
+    peopleAhead.value = myPos === -1 ? 0 : myPos
+    waitTime.value = myPos === -1 ? 0 : myPos * 5
+  } catch {
+    clearInterval(pollTimer)
     router.push('/')
   }
-})
+}
 
-const leaveQueue = () => {
+async function leaveQueue() {
+  const participantId = getCookie('participantId')
+  if (participantId) {
+    await axios.delete(
+      `http://localhost:8080/api/queues/${route.params.id}/participants/${participantId}`,
+    )
+    removeCookie('participantId')
+  }
   router.push('/')
 }
 
 // TODO
 function openParticipants() {
   // список участников
+}
+
+function onFinishedConfirm() {
+  showFinished.value = false
+  router.push('/')
 }
 </script>
 
@@ -133,6 +191,18 @@ function openParticipants() {
   background: var(--primary-hover);
 }
 
+.your-turn {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.btn-leave--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .page-body {
     padding: 0 16px;
@@ -148,6 +218,10 @@ function openParticipants() {
 
   .wait-time {
     font-size: 28px;
+  }
+
+  .your-turn {
+    font-size: 35px;
   }
 }
 </style>
