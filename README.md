@@ -18,24 +18,8 @@ go run .
 
 ```bash
 cd frontend
+npm install
 npm run dev
-```
-
-## Структура проекта
-
-```
-flowq/
-├── backend/                  # Go-сервер
-├── frontend/                 # Vue-приложение
-│   ├── public/               # статика
-│   └── src/
-│       ├── assets/           # глобальные стили
-│       ├── components/       # переиспользуемые компоненты
-│       ├── router/           # маршруты
-│       ├── views/            # страницы
-│       ├── App.vue           # корневой компонент
-│       └── main.js           # точка входа
-└── README.md
 ```
 
 ## Страницы
