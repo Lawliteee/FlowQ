@@ -11,12 +11,7 @@
   </header>
 
   <LoginModal v-if="loginOpen" @close="loginOpen = false" @switch-to-register="switchToRegister" />
-
-  <RegisterModal
-    v-if="registerOpen"
-    @close="registerOpen = false"
-    @switch-to-login="switchToLogin"
-  />
+  <RegisterModal v-if="registerOpen" @close="registerOpen = false" @switch-to-login="switchToLogin"/>
 </template>
 
 <script setup>

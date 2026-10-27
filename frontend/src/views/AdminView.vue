@@ -1,6 +1,7 @@
 <template>
   <div class="admin-page">
 
+    <!-- Кнопка чата -->
     <button class="chat-btn" title="Чат">
       <img src="/icons/chat.png" alt="чат" width="30" height="30" />
     </button>
@@ -143,6 +144,7 @@ async function finishQueue() {
   position: relative;
 }
 
+/* Чат */
 .chat-btn {
   position: fixed;
   top: 90px;

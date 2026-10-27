@@ -1,14 +1,17 @@
 <template>
   <div class="page-body">
 
+    <!-- Кнопка чата -->
     <button class="chat-btn" title="Чат">
       <img src="/icons/chat.png" alt="чат" width="30" height="30" />
     </button>
 
+    <!-- Список участников -->
     <button class="burger-btn" @click="openParticipants" title="Список участников">
       <img src="/icons/burger.png" alt="меню" width="22" height="22" />
     </button>
 
+    <!-- Информация об очереди -->
     <section class="queue-info">
       <h2 class="queue-title">{{ queueTitle }}</h2>
     </section>
@@ -147,6 +150,7 @@ function onFinishedConfirm() {
   background: #cfcfcf;
 }
 
+/* Чат */
 .chat-btn {
   position: absolute;
   top: 0px;
