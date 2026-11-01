@@ -17,8 +17,10 @@
     </section>
     <section class="content">
       <p v-if="waitTime === -1" class="your-turn">Ваша очередь!</p>
+      <p v-else-if="currentNumber === 0" class="wait-time">Очередь ещё не началась</p>
       <p v-else class="wait-time">Осталось ждать: {{ waitTime }} мин.</p>
-      <p class="ahead-count">Перед вами: {{ peopleAhead }} чел.</p>
+      <p v-if="currentNumber > 0" class="ahead-count">Перед вами: {{ peopleAhead }} чел.</p>
+      <p v-else class="ahead-count" style="visibility: hidden;">placeholder</p>
       <button
         class="btn-leave"
         :disabled="waitTime === -1"
@@ -31,7 +33,9 @@
 
     <!-- Модалки -->
     <QueueFinishedModal v-if="showFinished" @confirm="onFinishedConfirm"/>
-    <ParticipantsModal v-if="showParticipants" :participants="participants" @close="showParticipants = false"/>
+    <ParticipantsModal v-if="showParticipants"
+      :participants="participants" :currentParticipant="currentParticipant"
+      @close="showParticipants = false"/>
   </div>
 </template>
 
@@ -55,6 +59,8 @@ const router = useRouter()
 const queueTitle = ref('')
 const waitTime = ref(0)
 const peopleAhead = ref(0)
+const currentNumber = ref(0)
+const currentParticipant = ref(null)
 
 onMounted(async () => {
   await fetchQueue() // загружаем данные
@@ -69,7 +75,9 @@ async function fetchQueue() {
     const response = await axios.get(`http://localhost:8080/api/queues/${queueId}`)
     const data = response.data
 
-    participants.value = data.participants || [] // Получаем участников очереди
+    participants.value = data.participants || []   // Получаем участников очереди
+    currentNumber.value = data.currentNumber ?? 0
+    currentParticipant.value = data.currentParticipant ?? null
 
     if (data.finished) {
       showFinished.value = true
