@@ -20,7 +20,7 @@
       <p v-else-if="currentNumber === 0" class="wait-time">Очередь ещё не началась</p>
       <p v-else class="wait-time">Осталось ждать: {{ waitTime }} мин.</p>
       <p v-if="currentNumber > 0" class="ahead-count">Перед вами: {{ peopleAhead }} чел.</p>
-      <p v-else class="ahead-count" style="visibility: hidden;">placeholder</p>
+      <p v-else class="ahead-count" style="visibility: hidden">placeholder</p>
       <button
         class="btn-leave"
         :disabled="waitTime === -1"
@@ -32,10 +32,14 @@
     </section>
 
     <!-- Модалки -->
-    <QueueFinishedModal v-if="showFinished" @confirm="onFinishedConfirm"/>
-    <ParticipantsModal v-if="showParticipants"
-      :participants="participants" :currentParticipant="currentParticipant"
-      @close="showParticipants = false"/>
+    <QueueFinishedModal v-if="showFinished" @confirm="onFinishedConfirm" />
+    <ParticipantsModal
+      v-if="showParticipants"
+      :participants="participants"
+      :currentParticipant="currentParticipant"
+      :myId="getCookie('participantId')"
+      @close="showParticipants = false"
+    />
   </div>
 </template>
 
