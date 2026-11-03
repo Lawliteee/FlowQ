@@ -32,6 +32,9 @@
       <div v-for="(p, idx) in displayedParticipants" :key="p.id" class="participant-row" :class="{ 'participant-row--first': idx === 0 }">
         <span class="p-number">{{ idx + 1 }}.</span>
         <span class="p-name">{{ p.name }}</span>
+        <button v-if="idx !== 0"
+          class="btn-remove" @click="removeParticipant(p.id)"
+          title="Исключить">Х</button>
       </div>
       <div v-if="displayedParticipants.length === 0" class="empty-list">Участников пока нет</div>
     </div>
@@ -126,6 +129,16 @@ async function callNext() {
   queue.value.currentNumber = response.data.currentNumber
   queue.value.participants = response.data.participant
   queue.value.currentParticipant = response.data.currentParticipant ?? null
+}
+
+// Удаляет участника очереди
+async function removeParticipant(participantId) {
+  await axios.delete(
+    `http://localhost:8080/api/queues/${route.params.id}/participants/${participantId}`
+  )
+
+  // Новый массив без удаленного участника
+  queue.value.participants = queue.value.participants.filter(p => p.id !== participantId)
 }
 
 // Завершаем очередь
@@ -417,5 +430,23 @@ async function finishQueue() {
   .btn-next {
     order: -1;
   }
+}
+
+/* Кнопка удаления участника */
+.btn-remove {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.20s;
+}
+
+.btn-remove:hover {
+  color: var(--text);
 }
 </style>
