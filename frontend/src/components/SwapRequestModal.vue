@@ -5,9 +5,7 @@
         <h3>Предложение обмена</h3>
       </div>
 
-      <p class="swap-text">
-        <span class="swap-name">{{ fromName }}</span> предлагает поменяться с вами местами
-      </p>
+      <p class="swap-text">{{ fromName }} предлагает поменяться с вами местами</p>
 
       <div class="swap-actions">
         <button class="btn-decline" @click="$emit('decline')">Отказать</button>
@@ -60,15 +58,9 @@ h3 {
 
 .swap-text {
   font-size: 14px;
-  color: var(--text-muted);
   padding: 14px 20px;
   line-height: 1.5;
   margin: 0;
-}
-
-.swap-name {
-  font-weight: 600;
-  color: var(--text);
 }
 
 .swap-actions {

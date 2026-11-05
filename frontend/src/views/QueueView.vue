@@ -42,11 +42,10 @@
       v-if="showParticipants" :participants="participants"
       :currentParticipant="currentParticipant" :myId="getCookie('participantId')"
       @close="showParticipants = false"/>
-    <SwapRequestModal
-      v-if="showSwapRequest" :fromName="swapFromName"
-      @accept="acceptSwap" @decline="declineSwap"/>
+    <SwapRequestModal v-if="showSwapRequest" :fromName="swapFromName" @accept="acceptSwap" @decline="declineSwap"/>
     <KickedModal v-if="showKicked" @confirm="router.push('/')"/>
     <ChatModal v-if="showChat" @close="showChat = false" />
+    <SwapDeclinedModal v-if="showSwapDeclined" :fromName="swapDeclinedName" @confirm="showSwapDeclined = false"/>
   </div>
 </template>
 
@@ -57,6 +56,7 @@ import ParticipantsModal from '../components/ParticipantsModal.vue'
 import SwapRequestModal from '../components/SwapRequestModal.vue'
 import ChatModal from '../components/ChatModal.vue'
 import KickedModal from '../components/KickedModal.vue'
+import SwapDeclinedModal from '../components/SwapDeclinedModal.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
@@ -74,6 +74,9 @@ const router = useRouter()
 
 const showSwapRequest = ref(false)
 const swapFromName = ref('')
+
+const showSwapDeclined = ref(false)
+const swapDeclinedName = ref('')
 
 const queueTitle = ref('')
 const waitTime = ref(0)
@@ -180,12 +183,15 @@ function declineSwap() {
 }
 
 
-// Тестирование открытия модалки на T
+// Тестирование открытия модалок
 window.addEventListener('keydown', onKeydown)
 function onKeydown(e) {
   if (e.key === 't') {
     swapFromName.value = 'Иван'
     showSwapRequest.value = true
+  } else if (e.key === 'y') {
+    swapDeclinedName.value = 'Иван'
+    showSwapDeclined.value = true
   }
 }
 </script>
