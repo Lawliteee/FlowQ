@@ -2,7 +2,7 @@
   <div class="page-body">
 
     <!-- Кнопка чата -->
-    <button class="chat-btn" title="Чат">
+    <button class="chat-btn" @click="showChat = true" title="Чат">
       <img src="/icons/chat.png" alt="чат" width="30" height="30" />
     </button>
 
@@ -46,6 +46,7 @@
       v-if="showSwapRequest" :fromName="swapFromName"
       @accept="acceptSwap" @decline="declineSwap"/>
     <KickedModal v-if="showKicked" @confirm="router.push('/')"/>
+    <ChatModal v-if="showChat" @close="showChat = false" />
   </div>
 </template>
 
@@ -54,6 +55,7 @@ import { getCookie, removeCookie } from '../utils/cookies.js'
 import QueueFinishedModal from '../components/QueueFinishedModal.vue'
 import ParticipantsModal from '../components/ParticipantsModal.vue'
 import SwapRequestModal from '../components/SwapRequestModal.vue'
+import ChatModal from '../components/ChatModal.vue'
 import KickedModal from '../components/KickedModal.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -62,6 +64,7 @@ import axios from 'axios'
 let pollTimer = null
 const showFinished = ref(false)
 const showKicked = ref(false)
+const showChat = ref(false)
 
 const showParticipants = ref(false)
 const participants = ref([])
