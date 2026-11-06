@@ -26,7 +26,8 @@
 
 <script setup>
 import { setCookie } from '../utils/cookies.js'
-import { ref, computed } from 'vue'
+import { getUser } from '../utils/auth.js'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
@@ -40,6 +41,11 @@ const errorMsg = ref('')
 
 // Проверяется возможность перехода в очередь (если поля заполнены)
 const canSubmit = computed(() => userName.value.trim() !== '' && queueId.value.trim() !== '')
+
+onMounted(() => {
+  const user = getUser()
+  if (user?.name) userName.value = user.name
+})
 
 // Переход в очередь
 async function submitQueue() {
