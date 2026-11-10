@@ -8,8 +8,10 @@
 
     <!-- Верхняя панель -->
     <div class="queue-bar">
-      <span class="queue-name">{{ queue.name }}</span>
-      <span class="queue-time">начало: {{ queue.startTime }}</span>
+      <div class="queue-meta">
+        <span class="queue-name" :title="queue.name">{{ queue.name }}</span>
+        <span class="queue-time">начало: {{ queue.startTime }}</span>
+      </div>
       <button class="btn-copy" :class="{ 'btn-copy--copied': copied }" @click="copyId">
         <span class="btn-text">{{ copied ? 'Скопировано' : 'Скопировать ID' }}</span>
       </button>
@@ -29,12 +31,22 @@
 
     <!-- Список участников -->
     <div class="participants-panel" :class="{ 'participants-panel-ns': notStarted }">
-      <div v-for="(p, idx) in displayedParticipants" :key="p.id" class="participant-row" :class="{ 'participant-row--first': idx === 0 }">
-        <span class="p-number">{{ idx + 1 }}.</span>
+      <div
+        v-for="(p, idx) in displayedParticipants"
+        :key="p.id"
+        class="participant-row"
+        :class="{ 'participant-row--first': idx === 0 }"
+      >
+        <span class="p-number">{{ idx + 1 }}</span>
         <span class="p-name">{{ p.name }}</span>
-        <button v-if="idx !== 0"
-          class="btn-remove" @click="removeParticipant(p.id)"
-          title="Исключить">Х</button>
+        <button
+          v-if="idx !== 0"
+          class="btn-remove"
+          @click="removeParticipant(p.id)"
+          title="Исключить"
+        >
+          &times;
+        </button>
       </div>
       <div v-if="displayedParticipants.length === 0" class="empty-list">Участников пока нет</div>
     </div>
@@ -76,8 +88,8 @@ const queue = ref({
 })
 
 // Участник для отображения
-const displayedParticipant = computed(() =>
-  queue.value.currentParticipant ?? queue.value.participants[0] ?? null
+const displayedParticipant = computed(
+  () => queue.value.currentParticipant ?? queue.value.participants[0] ?? null,
 )
 
 // Список для отображения
@@ -143,7 +155,7 @@ async function removeParticipant(participantId) {
   )
 
   // Новый массив без удаленного участника
-  queue.value.participants = queue.value.participants.filter(p => p.id !== participantId)
+  queue.value.participants = queue.value.participants.filter((p) => p.id !== participantId)
 }
 
 // Завершаем очередь
@@ -158,14 +170,12 @@ async function finishQueue() {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0px 48px 55px;
   gap: 20px;
+  padding: 16px 48px max(32px, env(safe-area-inset-bottom));
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
-  box-sizing: border-box;
-  height: 100vh;
-  max-height: 100vh;
+  height: calc(100dvh - 80px);
   overflow: hidden;
   position: relative;
 }
@@ -178,66 +188,77 @@ async function finishQueue() {
   width: 46px;
   height: 46px;
   background: var(--panel);
-  border: none;
+  border: 1px solid var(--panel-border);
   border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.20s;
+  transition: background 0.2s;
   z-index: 10;
 }
-.chat-btn:hover { background: #cfcfcf; }
+.chat-btn:hover {
+  background: var(--panel-hover);
+}
 
 .queue-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 16px;
   flex-shrink: 0;
 }
 
+.queue-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
 .queue-name {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .queue-time {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .btn-copy {
-  margin-left: auto;
   background: var(--panel);
   color: var(--text);
-  border: none;
+  border: 1px solid var(--panel-border);
   border-radius: 10px;
   padding: 8px 18px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   font-family: 'Fira Sans', sans-serif;
-  min-width: 130px;
+  min-width: 140px;
   text-align: center;
-  transition: background 0.20s, color 0.20s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-copy:hover {
-  background: #cfcfcf;
+  background: var(--panel-hover);
 }
 
-.btn-copy--copied {
-  background: var(--primary-dark);
-  color: white;
-  text-align: center;
-}
-
+.btn-copy--copied,
 .btn-copy--copied:hover {
-  background: var(--primary-hover);
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: white;
 }
 
 .btn-text {
@@ -249,27 +270,28 @@ async function finishQueue() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 12px 28px;
   flex-wrap: wrap;
   flex-shrink: 0;
+  padding: 8px 0;
 }
 
 .current-label {
   display: flex;
   align-items: baseline;
-  gap: 16px;
+  gap: 14px;
 }
 
 .current-text {
-  font-size: 44px;
+  font-size: 36px;
   font-weight: 700;
   color: var(--text);
 }
 
 .current-number {
-  font-size: 60px;
+  font-size: 56px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--primary-dark);
   line-height: 1;
 }
 
@@ -278,6 +300,7 @@ async function finishQueue() {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+  min-width: 0;
 }
 
 .participant-name {
@@ -285,6 +308,7 @@ async function finishQueue() {
   font-weight: 500;
   color: var(--text);
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .participant-priority {
@@ -295,8 +319,10 @@ async function finishQueue() {
 
 .participants-panel {
   background: var(--panel);
-  border-radius: 18px;
-  padding: 8px 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+  padding: 8px;
   flex: 1;
   overflow-y: auto;
   min-height: 0;
@@ -305,13 +331,32 @@ async function finishQueue() {
 .participant-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  border-top: 1px solid var(--divider);
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.participant-row + .participant-row {
+  position: relative;
+}
+
+.participant-row + .participant-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: var(--divider);
 }
 
 .participant-row--first {
-  border-top: none;
+  background: var(--input-bg);
+  box-shadow: 0 1px 6px rgba(154, 85, 184, 0.12);
+}
+
+.participant-row--first + .participant-row::before {
+  display: none;
 }
 
 .participant-row--first .p-name {
@@ -319,16 +364,30 @@ async function finishQueue() {
 }
 
 .p-number {
-  font-size: 14px;
-  font-weight: 400;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--panel-hover);
   color: var(--text);
-  min-width: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.participant-row--first .p-number {
+  background: var(--primary-dark);
+  color: white;
 }
 
 .p-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--text);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .empty-list {
@@ -338,11 +397,35 @@ async function finishQueue() {
   font-size: 15px;
 }
 
+/* Кнопка исключения участника */
+.btn-remove {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-remove:hover {
+  background: var(--panel-hover);
+  color: #d04a4a;
+}
+
 .actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
   flex-shrink: 0;
   margin-top: auto;
 }
@@ -350,8 +433,8 @@ async function finishQueue() {
 .btn-secondary {
   background: var(--panel);
   color: var(--text);
-  border: none;
-  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
   padding: 12px 24px;
   font-size: 14px;
   font-weight: 600;
@@ -362,14 +445,14 @@ async function finishQueue() {
 }
 
 .btn-secondary:hover {
-  background: #cfcfcf;
+  background: var(--panel-hover);
 }
 
 .btn-next {
   background: var(--primary-button);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 12px 36px;
   font-size: 17px;
   font-weight: 700;
@@ -383,46 +466,105 @@ async function finishQueue() {
   background: var(--primary-button-hover);
 }
 
-.participants-panel-ns { opacity: 0.4; }
+.btn-copy:focus-visible,
+.btn-secondary:focus-visible,
+.btn-next:focus-visible,
+.btn-remove:focus-visible,
+.chat-btn:focus-visible {
+  outline: 2px solid var(--primary-dark);
+  outline-offset: 2px;
+}
 
-.current-block-ns { opacity: 0.4; }
+.participants-panel-ns {
+  opacity: 0.4;
+}
+
+.current-block-ns {
+  opacity: 0.4;
+}
 
 @media (max-width: 1024px) {
   .admin-page {
-    padding: 0 32px 40px;
+    padding: 16px 32px max(28px, env(safe-area-inset-bottom));
   }
 
   .chat-btn {
     display: none;
   }
+
+  .current-text {
+    font-size: 30px;
+  }
+
+  .current-number {
+    font-size: 48px;
+  }
 }
 
 @media (max-width: 768px) {
   .admin-page {
-    padding: 0 16px 24px;
+    padding: 16px 16px max(20px, env(safe-area-inset-bottom));
+    gap: 16px;
     height: auto;
-    max-height: none;
-    min-height: auto;
+    min-height: calc(100dvh - 80px);
     overflow: visible;
   }
 
+  /* название на всю строку, время и кнопка копирования - ниже */
   .queue-bar {
     flex-wrap: wrap;
-    gap: 8px 12px;
+    gap: 10px 12px;
+  }
+
+  .queue-meta {
+    flex: 1 1 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .queue-name {
+    font-size: 18px;
+    max-width: 100%;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .btn-copy {
+    width: 100%;
+  }
+
+  .current-block {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .current-label {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
   }
 
   .current-text {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .current-number {
-    font-size: 38px;
+    font-size: 44px;
+  }
+
+  .current-participant-info {
+    align-items: center;
   }
 
   .participants-panel {
-    flex: none;
+    flex: 1 1 auto;
     min-height: 200px;
-    max-height: 45vh;
+    max-height: 55dvh;
   }
 
   .actions {
@@ -434,24 +576,12 @@ async function finishQueue() {
 
   .btn-next {
     order: -1;
+    padding: 14px 20px;
+  }
+
+  .btn-secondary {
+    padding: 13px 20px;
   }
 }
-
-/* Кнопка удаления участника */
-.btn-remove {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
-  line-height: 1;
-  transition: color 0.20s;
-}
-
-.btn-remove:hover {
-  color: var(--text);
-}
 </style>
+
