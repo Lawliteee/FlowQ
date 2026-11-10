@@ -115,6 +115,33 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		currentParticipant = &Participant{ID: cpID.String, Name: cpName.String}
 	}
 
+	rows, err := h.store.db.Query(`
+		SELECT wait_time FROM queue_wait_stats
+		WHERE queue_id = $1
+		`, id)
+
+	avgWait := 5
+
+	if err == nil {
+		defer rows.Close()
+
+		total := 0
+		count := 0
+
+		for rows.Next() {
+			var wt int
+			rows.Scan(&wt)
+			total += wt
+			count++
+		}
+
+		if count > 0 {
+			avgWait = total / count
+		}
+	}
+
+
+
 	type QueueInfo struct {
 		ID                 string        `json:"id"`
 		Name               string        `json:"name"`
@@ -122,7 +149,7 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		CurrentNumber      int           `json:"currentNumber"`
 		Participants       []Participant `json:"participants"`
 		PeopleAhead        int           `json:"peopleAhead"`
-		WaitTime           int           `json:"waitTime"`
+		WaitTime           avgWait * len(queue.Participants)           `json:"waitTime"`
 		Finished           bool          `json:"finished"`
 		CurrentParticipant *Participant  `json:"currentParticipant"`
 		MaxParticipants    int           `json:"maxParticipants"`
