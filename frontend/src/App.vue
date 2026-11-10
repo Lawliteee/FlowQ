@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div class="app-shell">
     <AppHeader />
     <RouterView />
   </div>
@@ -11,9 +11,15 @@ import AppHeader from './components/AppHeader.vue'
 
 <style>
 #app {
+  padding-top: 80px;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding-top: 40px;
+}
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 </style>

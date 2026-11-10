@@ -17,8 +17,11 @@
   --text: #000000;
   --text-muted: #888;
   --bg: #fff;
-  --divider: #c6c5c5;
-  --panel: #d4d4d4;
+  --divider: #e6d9ef;
+  --panel: #f3e8fa;
+  --panel-hover: #ebdff4;
+  --panel-border: #e3d3ee;
+  --shadow-panel: 0 2px 14px rgba(154, 85, 184, 0.08);
   --input-bg: #ffffff;
   --number-bg: #e4e4e4;
 }

@@ -225,7 +225,7 @@ function onKeydown(e) {
 }
 
 .burger-btn:hover {
-  background: #cfcfcf;
+  background: var(--panel-hover);
 }
 
 /* Чат */
