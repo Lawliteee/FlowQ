@@ -114,6 +114,45 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 	if cpID.Valid && cpID.String != "" {
 		currentParticipant = &Participant{ID: cpID.String, Name: cpName.String}
 	}
+	
+	avgWait := float64(5)
+
+	rows, err := h.store.db.Query(`
+		SELECT wait_time FROM queue_wait_stats
+		WHERE queue_id = $1
+		`, id)
+
+	if err == nil {
+		defer rows.Close()
+
+		total := 0
+		count := 0
+
+		for rows.Next() {
+			var wt int
+			if err := rows.Scan(&wt); err == nil {
+				total += wt
+				count++
+			}
+		}
+
+		if count > 0 {
+			avgWait = float64(total) / float64(count)
+		}
+	}
+
+	etAs := make([]int, len(queue.Participants))
+
+	for i := range queue.Participants {
+		etAs[i] = int(avgWait * float64(i+1))
+	}
+
+	waitTime := 0
+	if len(etAs) > 0 {
+		waitTime = etAs[0]
+	}
+
+
 
 	type QueueInfo struct {
 		ID                 string        `json:"id"`
@@ -122,7 +161,8 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		CurrentNumber      int           `json:"currentNumber"`
 		Participants       []Participant `json:"participants"`
 		PeopleAhead        int           `json:"peopleAhead"`
-		WaitTime           int           `json:"waitTime"`
+		WaitTime           avgWait * len(queue.Participants)           `json:"waitTime"`
+		ETAs               []int         `json:"etAs"`
 		Finished           bool          `json:"finished"`
 		CurrentParticipant *Participant  `json:"currentParticipant"`
 		MaxParticipants    int           `json:"maxParticipants"`
@@ -136,7 +176,8 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		CurrentNumber:      queue.CurrentNumber,
 		Participants:       queue.Participants,
 		PeopleAhead:        len(queue.Participants),
-		WaitTime:           len(queue.Participants) * 5, // заглушка: 5 мин на человека
+		WaitTime:           waitTime,
+		ETAs:               etAs,
 		Finished:           queue.Finished,
 		CurrentParticipant: currentParticipant,
 		MaxParticipants:    queue.MaxParticipants,
