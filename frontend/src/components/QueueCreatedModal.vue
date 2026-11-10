@@ -7,6 +7,7 @@
         <input class="id-input" :value="queueId" readonly />
         <button class="btn-copy" @click="copy">{{ copied ? 'Скопировано' : 'Копировать' }}</button>
       </div>
+      <p v-if="autoCopied" class="auto-hint">ID уже скопирован в буфер обмена</p>
       <button class="modal-btn" @click="$emit('close')">Перейти к очереди</button>
     </div>
   </div>
@@ -14,16 +15,20 @@
 
 <script setup>
 import { ref } from 'vue'
-const props = defineProps({ queueId: String })
+const props = defineProps({ queueId: String, autoCopied: Boolean })
 defineEmits(['close'])
 
 const copied = ref(false)
 
 // Копирует id очереди
-function copy() {
-  navigator.clipboard.writeText(props.queueId)
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 1500)
+async function copy() {
+  try {
+    await navigator.clipboard.writeText(props.queueId)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 1500)
+  } catch {
+    // буфер обмена недоступен - ID можно выделить в поле вручную
+  }
 }
 </script>
 
@@ -68,7 +73,15 @@ h3 {
 .id-row {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
+}
+
+.auto-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: left;
+  padding-left: 4px;
+  margin-bottom: 20px;
 }
 
 .id-input {
@@ -96,7 +109,7 @@ h3 {
   transition: background 0.20s;
 }
 
-.btn-copy:hover { background: var(--panel); }
+.btn-copy:hover { background: var(--panel-hover); }
 
 .modal-btn {
   background: var(--primary-dark);
