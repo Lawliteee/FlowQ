@@ -17,7 +17,11 @@
             id="description"
             class="form-input form-textarea"
             v-model="description"
+            :maxlength="DESCRIPTION_MAX"
           ></textarea>
+          <span class="char-counter" :class="{ 'char-counter--limit': description.length >= DESCRIPTION_MAX }">
+            {{ description.length }}/{{ DESCRIPTION_MAX }}
+          </span>
         </div>
       </div>
 
@@ -93,7 +97,7 @@
       <button class="btn-create" @click="createQueue">Создать</button>
     </section>
 
-    <QueueCreatedModal v-if="createdQueueId" :queueId="createdQueueId" @close="router.push(`/admin/${createdQueueId}`)"/>
+    <QueueCreatedModal v-if="createdQueueId" :queueId="createdQueueId" :autoCopied="idCopied" @close="router.push(`/admin/${createdQueueId}`)"/>
   </main>
 </template>
 
@@ -106,6 +110,8 @@ import axios from 'axios'
 const router = useRouter()
 
 const createdQueueId = ref(null)
+const idCopied = ref(false) // ID уже скопирован в буфер автоматически
+const DESCRIPTION_MAX = 300
 
 const queueName = ref('')
 const description = ref('')
@@ -135,7 +141,7 @@ const createQueue = async () => {
     const payload = {
       // Объект с данными
       queueName: queueName.value,
-      description: description.value,
+      description: description.value.slice(0, DESCRIPTION_MAX),
       startTime: startTime.value,
       maxParticipants: parseInt(maxParticipants.value) || 0,
       hasPriority: hasPriority.value,
@@ -149,6 +155,14 @@ const createQueue = async () => {
 
     // Отправляем Post запрос
     const response = await axios.post('http://localhost:8080/api/queues', payload)
+
+    // Сразу кладём ID в буфер обмена администратору
+    try {
+      await navigator.clipboard.writeText(response.data.id)
+      idCopied.value = true
+    } catch {
+      idCopied.value = false
+    }
 
     createdQueueId.value = response.data.id // Модальное окно с идентификатором
   } catch (error) {
@@ -178,8 +192,10 @@ h1 {
 
 .form-panel {
   background: var(--panel);
-  border-radius: 18px;
-  padding: 6px 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+  padding: 12px 32px;
   width: 100%;
   max-width: 700px;
 }
@@ -188,12 +204,11 @@ h1 {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  padding: 18px 0;
-  border-top: 1px solid var(--divider);
+  padding: 14px 0;
 }
 
 .form-row.first-row {
-  border-top: none;
+  padding-top: 8px;
 }
 
 .form-label {
@@ -213,22 +228,35 @@ h1 {
   font-family: 'Fira Sans', sans-serif;
   font-size: 14px;
   background: var(--input-bg);
-  border: none;
-  border-radius: 8px;
+  border: 1px solid var(--divider);
+  border-radius: 10px;
   padding: 9px 14px;
   width: 100%;
   color: var(--text);
   outline: none;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.15s, border-color 0.15s;
 }
 
 .form-input:focus {
-  box-shadow: 0 0 0 2px var(--primary-dark);
+  border-color: var(--primary-dark);
+  box-shadow: 0 0 0 3px rgba(180, 111, 210, 0.18);
 }
 
 .form-textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+.char-counter {
+  display: block;
+  margin-top: 6px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.char-counter--limit {
+  color: #d04a4a;
 }
 
 .inline-fields {
@@ -292,6 +320,18 @@ h1 {
   color: var(--text);
 }
 
+.checkbox-row .checkbox-item {
+  background: var(--input-bg);
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  padding: 8px 14px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.checkbox-row .checkbox-item:hover {
+  border-color: var(--primary-dark);
+}
+
 input[type='checkbox'] {
   width: 17px;
   height: 17px;
@@ -328,7 +368,7 @@ input[type='checkbox'] {
 .btn-add {
   background: var(--input-bg);
   border: 1px solid var(--divider);
-  border-radius: 8px;
+  border-radius: 10px;
   width: 38px;
   height: 38px;
   font-size: 22px;
@@ -343,7 +383,7 @@ input[type='checkbox'] {
 }
 
 .btn-add:hover {
-  background: #f0f0f0;
+  background: var(--panel-hover);
 }
 
 .admin-list {
@@ -365,7 +405,7 @@ input[type='checkbox'] {
 .btn-back {
   background: var(--panel);
   color: var(--text);
-  border: none;
+  border: 1px solid var(--panel-border);
   border-radius: 10px;
   padding: 14px 40px;
   font-size: 16px;
@@ -376,7 +416,7 @@ input[type='checkbox'] {
 }
 
 .btn-back:hover {
-  background: #c4c4c4;
+  background: var(--panel-hover);
 }
 
 .btn-create {
@@ -447,6 +487,10 @@ input[type='checkbox'] {
 
   .ml {
     margin-left: 0;
+  }
+
+  .checkbox-row .checkbox-item {
+    width: 100%;
   }
 
   .btn-back,
