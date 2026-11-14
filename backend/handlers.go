@@ -161,7 +161,7 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		CurrentNumber      int           `json:"currentNumber"`
 		Participants       []Participant `json:"participants"`
 		PeopleAhead        int           `json:"peopleAhead"`
-		WaitTime           avgWait * len(queue.Participants)           `json:"waitTime"`
+		WaitTime           int           `json:"waitTime"`
 		ETAs               []int         `json:"etAs"`
 		Finished           bool          `json:"finished"`
 		CurrentParticipant *Participant  `json:"currentParticipant"`
