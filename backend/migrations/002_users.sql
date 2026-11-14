@@ -1,4 +1,4 @@
--- SmartQueue: таблица пользователей
+-- FlowQ: таблица пользователей
 
 CREATE TABLE IF NOT EXISTS users (
     id           TEXT        PRIMARY KEY,

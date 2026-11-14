@@ -1,4 +1,4 @@
-module smartqueue
+module flowq
 
 go 1.25.0
 
