@@ -51,3 +51,14 @@ type QueueResponse struct {
 	Name string `json:"name"`
 	Link string `json:"link"`
 }
+
+type SwapRequest struct {
+    FromID   string `json:"fromId"`
+    FromName string `json:"fromName"`
+    ToID     string `json:"toId"`
+}
+
+type SwapRespondRequest struct {
+    SwapID  string `json:"swapId"`
+    Accept  bool   `json:"accept"`
+}
