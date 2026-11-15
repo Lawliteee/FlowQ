@@ -14,7 +14,7 @@
         >
           <span class="p-number">{{ idx + 1 }}.</span>
           <span class="p-name">{{ p.name }}</span>
-          <button v-if="p.id !== myId" class="btn-swap"
+          <button v-if="p.id !== myId && !(queueStarted && idx === 0)" class="btn-swap"
             @click="requestSwap(p)" title="Предложить обмен">
             <img src="/icons/swap.png" alt="обмен" width="16" height="16" />
           </button>
@@ -34,6 +34,7 @@ const props = defineProps({
   participants: { type: Array, default: () => [] },
   currentParticipant: { type: Object, default: null },
   myId: { type: String, default: null },
+  queueStarted: { type: Boolean, default: false }
 })
 
 const displayedParticipants = computed(() => {
