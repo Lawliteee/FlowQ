@@ -175,12 +175,14 @@ async function callNext() {
 
 // Удаляет участника очереди
 async function removeParticipant(participantId) {
-  await axios.delete(
-    `http://localhost:8080/api/queues/${route.params.id}/participants/${participantId}`
-  )
-
-  // Новый массив без удаленного участника
-  queue.value.participants = queue.value.participants.filter((p) => p.id !== participantId)
+  try {
+    // Отправляем запрос на удаление
+    await axios.delete(
+      `http://localhost:8080/api/queues/${route.params.id}/participants/${participantId}`
+    )
+  } catch (error) {
+    console.error('Ошибка при удалении участника:', error)
+  }
 }
 
 // Завершаем очередь
