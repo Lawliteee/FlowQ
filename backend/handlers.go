@@ -71,7 +71,7 @@ func (h *Handler) CreateQueue(w http.ResponseWriter, r *http.Request) {
 		PriorityCount:       req.PriorityCount,
 		InitialPriority:     req.InitialPriority,
 		AnonymousChat:       req.AnonymousChat,
-		SystemNotifications: req.SystemNotifications,
+		ImFreeFeature: 		 req.ImFreeFeature,
 		SwapPositions:       req.SwapPositions,
 		Admins:              req.Admins,
 		CreatedAt:           time.Now(),
@@ -159,6 +159,7 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 	type QueueInfo struct {
 		ID                 string        `json:"id"`
 		Name               string        `json:"name"`
+		Description        string        `json:"description"`
 		StartTime          string        `json:"startTime"`
 		CurrentNumber      int           `json:"currentNumber"`
 		Participants       []Participant `json:"participants"`
@@ -168,12 +169,14 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		Finished           bool          `json:"finished"`
 		CurrentParticipant *Participant  `json:"currentParticipant"`
 		MaxParticipants    int           `json:"maxParticipants"`
+		ImFreeFeature 	   bool          `json:"imFreeFeature"`
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(QueueInfo{
 		ID:                 queue.ID,
 		Name:               queue.Name,
+		Description:        queue.Description,
 		StartTime:          queue.StartTime,
 		CurrentNumber:      queue.CurrentNumber,
 		Participants:       queue.Participants,
@@ -183,6 +186,7 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		Finished:           queue.Finished,
 		CurrentParticipant: currentParticipant,
 		MaxParticipants:    queue.MaxParticipants,
+		ImFreeFeature: 		queue.ImFreeFeature,
 	})
 }
 
