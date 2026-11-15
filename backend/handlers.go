@@ -26,6 +26,7 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueID := vars["id"]
 	participantID := r.URL.Query().Get("participantId")
+    senderName := r.URL.Query().Get("senderName")
 
 	// Проверяем существование очереди
 	if _, ok := h.store.Get(queueID); !ok {
@@ -40,15 +41,43 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	h.hub.Subscribe(queueID, participantID, conn)
-	defer h.hub.Unsubscribe(queueID, participantID, conn)
+    h.hub.Subscribe(queueID, participantID, conn)
+    defer h.hub.Unsubscribe(queueID, participantID, conn)
 
-	// Ожидаем закрытия соединения (пока не обрабатываем входящие сообщения)
-	for {
-		if _, _, err := conn.ReadMessage(); err != nil {
-			break
-		}
-	}
+    for {
+        _, msgBytes, err := conn.ReadMessage()
+        if err != nil {
+            break
+        }
+
+        var incoming struct {
+            Type string `json:"type"`
+            Text string `json:"text"`
+        }
+        if err := json.Unmarshal(msgBytes, &incoming); err != nil {
+            continue
+        }
+
+        if incoming.Type == "chat_message" && len(incoming.Text) > 0 {
+            text := incoming.Text
+            if len(text) > 100 {
+                text = text[:100]
+            }
+            msg := map[string]interface{}{
+        		"type":       "chat_message",
+        		"senderName": senderName,
+        		"senderId":   participantID,
+        		"text":       text,
+    		}
+    		// Сохраняем в историю
+    		h.hub.AddToHistory(queueID, ChatMessage{
+        		SenderID:   participantID,
+        		SenderName: senderName,
+        		Text:       text,
+    		})
+    		h.hub.Broadcast(queueID, msg)
+        }
+    }
 }
 
 // Создание очереди
