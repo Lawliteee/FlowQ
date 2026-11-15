@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-// Save сохраняет новую очередь вместе с администраторами.
+// Сохраняет новую очередь вместе с администраторами
 func (s *Store) Save(queue *Queue) error {
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -26,12 +27,12 @@ func (s *Store) Save(queue *Queue) error {
 		INSERT INTO queues (
 			id, name, description, start_time, max_participants,
 			has_priority, priority_count, initial_priority,
-			anonymous_chat, system_notifications, swap_positions,
+			skip_feature, skip_duration, im_free_feature, swap_positions,
 			created_at, current_number, finished
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
 		queue.ID, queue.Name, queue.Description, queue.StartTime, queue.MaxParticipants,
 		queue.HasPriority, queue.PriorityCount, queue.InitialPriority,
-		queue.AnonymousChat, queue.SystemNotifications, queue.SwapPositions,
+		queue.SkipFeature, queue.SkipDuration, queue.ImFreeFeature, queue.SwapPositions,
 		queue.CreatedAt, queue.CurrentNumber, queue.Finished,
 	)
 	if err != nil {
@@ -50,20 +51,20 @@ func (s *Store) Save(queue *Queue) error {
 	return tx.Commit()
 }
 
-// Get возвращает очередь со всеми участниками и администраторами.
+// Возвращает очередь со всеми участниками и администраторами
 func (s *Store) Get(id string) (*Queue, bool) {
 	queue := &Queue{}
 
 	err := s.db.QueryRow(`
 		SELECT id, name, description, start_time, max_participants,
 		       has_priority, priority_count, initial_priority,
-		       anonymous_chat, system_notifications, swap_positions,
+			   skip_feature, skip_duration, im_free_feature, swap_positions,
 		       created_at, current_number, finished
 		FROM queues WHERE id = $1`, id,
 	).Scan(
 		&queue.ID, &queue.Name, &queue.Description, &queue.StartTime, &queue.MaxParticipants,
 		&queue.HasPriority, &queue.PriorityCount, &queue.InitialPriority,
-		&queue.AnonymousChat, &queue.SystemNotifications, &queue.SwapPositions,
+		&queue.SkipFeature, &queue.SkipDuration, &queue.ImFreeFeature, &queue.SwapPositions,
 		&queue.CreatedAt, &queue.CurrentNumber, &queue.Finished,
 	)
 	if err == sql.ErrNoRows {
@@ -86,16 +87,25 @@ func (s *Store) Get(id string) (*Queue, bool) {
 		}
 	}
 
-	// Участники (отсортированы по времени вступления — FIFO)
+	// Участники (FIFO
 	pRows, err := s.db.Query(`
-		SELECT id, name, priority FROM participants
-		WHERE queue_id = $1 ORDER BY joined_at ASC`, id,
+    SELECT id, name, priority, skipped, skip_until, original_position
+    FROM participants
+    WHERE queue_id = $1 ORDER BY joined_at ASC`, id,
 	)
 	if err == nil {
 		defer pRows.Close()
 		for pRows.Next() {
 			var p Participant
-			if pRows.Scan(&p.ID, &p.Name, &p.Priority) == nil {
+			var skipUntil sql.NullTime
+			var origPos sql.NullInt64
+			if pRows.Scan(&p.ID, &p.Name, &p.Priority, &p.Skipped, &skipUntil, &origPos) == nil {
+				if skipUntil.Valid {
+					p.SkipUntil = &skipUntil.Time
+				}
+				if origPos.Valid {
+					p.OriginalPosition = int(origPos.Int64)
+				}
 				queue.Participants = append(queue.Participants, p)
 			}
 		}
@@ -104,11 +114,20 @@ func (s *Store) Get(id string) (*Queue, bool) {
 	if queue.Participants == nil {
 		queue.Participants = []Participant{}
 	}
+	
+	var cpID, cpName sql.NullString
+	s.db.QueryRow(`
+		SELECT current_participant_id, current_participant_name 
+		FROM queues WHERE id = $1`, id,
+	).Scan(&cpID, &cpName)
+	if cpID.Valid && cpID.String != "" {
+		queue.CurrentParticipant = &Participant{ID: cpID.String, Name: cpName.String}
+	}
 
 	return queue, true
 }
 
-// AddParticipant добавляет участника; ошибки только логируются (fire-and-forget).
+// добавляет участника в очередь.
 func (s *Store) AddParticipant(queueID string, p Participant) {
 	_, err := s.db.Exec(`
 		INSERT INTO participants (id, queue_id, name, priority, joined_at)
@@ -125,41 +144,216 @@ func (s *Store) RemoveParticipant(queueID, participantID string) {
         participantID, queueID)
 }
 
-// ShiftParticipant удаляет первого участника (FIFO) и увеличивает счётчик.
+// Удаляет первого участника и увеличивает счётчик
 func (s *Store) ShiftParticipant(queueID string) {
 	tx, err := s.db.Begin()
-    if err != nil { return }
-    defer tx.Rollback()
+	if err != nil {
+		return
+	}
+	defer tx.Rollback()
 
-    // Запоминаем первого участника как текущего
-    var pID, pName string
-    tx.QueryRow(`
-        SELECT id, name FROM participants
-        WHERE queue_id = $1 ORDER BY joined_at ASC LIMIT 1
-    `, queueID).Scan(&pID, &pName)
+	// Берём первого участника + время входа
+	var pID, pName string
+	var joinedAt time.Time
 
-    // Удаляем его из очереди ожидания
-    tx.Exec(`
-        DELETE FROM participants WHERE id = (
-            SELECT id FROM participants
-            WHERE queue_id = $1 ORDER BY joined_at ASC LIMIT 1
-        )`, queueID)
+	err = tx.QueryRow(`
+		SELECT id, name, joined_at
+		FROM participants
+		WHERE queue_id = $1
+		ORDER BY joined_at ASC
+		LIMIT 1
+	`, queueID).Scan(&pID, &pName, &joinedAt)
 
-    // Сохраняем как текущего и увеличиваем счётчик
-    tx.Exec(`
-        UPDATE queues
-        SET current_number = current_number + 1,
-            current_participant_id = $2,
-            current_participant_name = $3
-        WHERE id = $1
-    `, queueID, pID, pName)
+	if err != nil {
+		return
+	}
+
+	// Считаем РЕАЛЬНОЕ время ожидания (в минутах)
+	now := time.Now()
+	waitMinutes := int(now.Sub(joinedAt).Minutes())
+
+	// Считаем сколько людей было перед ним
+	var count int
+	tx.QueryRow(`
+		SELECT COUNT(*) FROM participants WHERE queue_id = $1
+	`, queueID).Scan(&count)
+
+	// Удаляем из очереди
+	tx.Exec(`
+		DELETE FROM participants WHERE id = $1
+	`, pID)
+
+	// Обновляем очередь
+	tx.Exec(`
+		UPDATE queues
+		SET current_number = current_number + 1,
+			current_participant_id = $2,
+			current_participant_name = $3,
+			last_served_at = NOW()
+		WHERE id = $1
+	`, queueID, pID, pName)
+
+	// Сохраняем реальное наблюдение
+	tx.Exec(`INSERT INTO queue_wait_stats (queue_id, wait_time, participants_count)
+		VALUES ($1, $2, $3)
+	`, queueID, waitMinutes, count)
 
     tx.Commit()
+
 }
 
-// FinishQueue помечает очередь как завершённую.
+// Помечает очередь как завершённую.
 func (s *Store) FinishQueue(queueID string) {
 	if _, err := s.db.Exec(`UPDATE queues SET finished = TRUE WHERE id = $1`, queueID); err != nil {
 		log.Printf("Ошибка FinishQueue для %s: %v", queueID, err)
 	}
+}
+
+// Ожидающий запрос на обмен
+type SwapOffer struct {
+    ID       string
+    QueueID  string
+    FromID   string
+    FromName string
+    ToID     string
+}
+
+// Хранит активные предложения обмена в памяти
+type SwapStore struct {
+    mu     sync.Mutex
+    offers map[string]*SwapOffer
+}
+
+func NewSwapStore() *SwapStore {
+    return &SwapStore{offers: make(map[string]*SwapOffer)}
+}
+
+func (ss *SwapStore) Add(offer *SwapOffer) {
+    ss.mu.Lock()
+    defer ss.mu.Unlock()
+    ss.offers[offer.ID] = offer
+}
+
+func (ss *SwapStore) Take(swapID string) (*SwapOffer, bool) {
+    ss.mu.Lock()
+    defer ss.mu.Unlock()
+    o, ok := ss.offers[swapID]
+    if ok { delete(ss.offers, swapID) }
+    return o, ok
+}
+
+func (s *Store) SwapParticipants(queueID, idA, idB string) error {
+    tx, err := s.db.Begin()
+    if err != nil { return err }
+    defer tx.Rollback()
+
+    // Меняем joined_at местами
+    var timeA, timeB time.Time
+    tx.QueryRow(`SELECT joined_at FROM participants WHERE id = $1`, idA).Scan(&timeA)
+    tx.QueryRow(`SELECT joined_at FROM participants WHERE id = $1`, idB).Scan(&timeB)
+
+    tx.Exec(`UPDATE participants SET joined_at = $1 WHERE id = $2`, timeB, idA)
+    tx.Exec(`UPDATE participants SET joined_at = $1 WHERE id = $2`, timeA, idB)
+
+    return tx.Commit()
+}
+
+func (s *Store) ClearCurrentParticipant(queueID string) {
+    s.db.Exec(`
+        UPDATE queues
+        SET current_participant_id = NULL,
+            current_participant_name = NULL
+        WHERE id = $1
+    `, queueID)
+}
+
+func (s *Store) SkipParticipant(queueID, participantID string, duration time.Duration) error {
+    tx, err := s.db.Begin()
+    if err != nil { return err }
+    defer tx.Rollback()
+
+    // Узнаём текущую позицию
+    var currentPos int
+    tx.QueryRow(`
+        SELECT COUNT(*) FROM participants
+        WHERE queue_id = $1
+        AND joined_at <= (SELECT joined_at FROM participants WHERE id = $2)
+    `, queueID, participantID).Scan(&currentPos)
+
+    skipUntil := time.Now().Add(duration)
+
+    // Ставим в конец — joined_at чуть больше последнего
+    tx.Exec(`
+        UPDATE participants
+        SET joined_at = (
+            SELECT COALESCE(MAX(joined_at), NOW()) FROM participants
+            WHERE queue_id = $1
+        ) + interval '1 second',
+        skipped = TRUE,
+        skip_until = $3,
+        original_position = $4
+        WHERE id = $2
+    `, queueID, participantID, skipUntil, currentPos)
+
+    return tx.Commit()
+}
+
+func (s *Store) ReturnParticipant(queueID, participantID string) error {
+    tx, err := s.db.Begin()
+    if err != nil { return err }
+    defer tx.Rollback()
+
+    // Узнаём оригинальную позицию
+    var origPos int
+    tx.QueryRow(`SELECT original_position FROM participants WHERE id = $1`, participantID).Scan(&origPos)
+
+    // Считаем сколько сейчас людей
+    var totalCount int
+    tx.QueryRow(`SELECT COUNT(*) FROM participants WHERE queue_id = $1`, queueID).Scan(&totalCount)
+
+    if origPos > totalCount {
+        // Старое место прошло — ставим первым
+        tx.Exec(`
+            UPDATE participants
+            SET joined_at = (
+                SELECT MIN(joined_at) - interval '1 second'
+                FROM participants WHERE queue_id = $1
+            ),
+            skipped = FALSE,
+            skip_until = NULL,
+            original_position = 0
+            WHERE id = $2
+        `, queueID, participantID)
+    } else {
+        // Возвращаем на старое место по joined_at
+        tx.Exec(`
+            UPDATE participants p
+            SET joined_at = (
+                SELECT joined_at - interval '500 milliseconds'
+                FROM participants
+                WHERE queue_id = $1
+                ORDER BY joined_at ASC
+                LIMIT 1 OFFSET $3
+            ),
+            skipped = FALSE,
+            skip_until = NULL,
+            original_position = 0
+            WHERE p.id = $2
+        `, queueID, participantID, origPos-1)
+    }
+
+    return tx.Commit()
+}
+
+// Вызывается периодически — возвращает просроченных skippers в конец навсегда
+func (s *Store) ExpireSkips(queueID string) {
+    s.db.Exec(`
+        UPDATE participants
+        SET skipped = FALSE,
+            skip_until = NULL,
+            original_position = 0
+        WHERE queue_id = $1
+        AND skipped = TRUE
+        AND skip_until < NOW()
+    `, queueID)
 }

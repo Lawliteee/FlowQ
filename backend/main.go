@@ -12,29 +12,44 @@ func main() {
 	db := NewDB()
 	defer db.Close()
 
-	RunMigrations(db) // создаёт таблицы, если их нет
+	RunMigrations(db)
 
 	store := NewStore(db)
-	handler := NewHandler(store)
+	hub := NewHub()
+	handler := NewHandler(store, hub)
 
 	r := mux.NewRouter()
-
 	api := r.PathPrefix("/api").Subrouter()
 
-	// Очереди
+	// Аутентификация (публичные)
+	api.HandleFunc("/auth/register", handler.Register).Methods("POST")
+	api.HandleFunc("/auth/login", handler.Login).Methods("POST")
+
+	// Очереди (публичные)
 	api.HandleFunc("/queues", handler.CreateQueue).Methods("POST")
 	api.HandleFunc("/queues/{id}", handler.GetQueue).Methods("GET")
 	api.HandleFunc("/queues/{id}/join", handler.JoinQueue).Methods("POST")
 	api.HandleFunc("/queues/{id}/participants/{participantId}", handler.LeaveQueue).Methods("DELETE")
+	api.HandleFunc("/queues/{id}/swap/request", handler.SwapRequest).Methods("POST")
+	api.HandleFunc("/queues/{id}/swap/respond", handler.SwapRespond).Methods("POST")
+	api.HandleFunc("/queues/{id}/im-free", handler.ImFree).Methods("POST")
+	api.HandleFunc("/queues/{id}/skip", handler.SkipMe).Methods("POST")
+	api.HandleFunc("/queues/{id}/return", handler.ReturnMe).Methods("POST")
 
-	// Админ
-	api.HandleFunc("/admin/queues/{id}/next", handler.CallNext).Methods("POST")
-	api.HandleFunc("/admin/queues/{id}/finish", handler.FinishQueue).Methods("POST")
+	// WebSocket для live обновлений
+	api.HandleFunc("/ws/queue/{id}", handler.HandleWebSocket).Methods("GET")
 
-	c := cors.New(cors.Options{ // CORS для локального фронтенда (Vite)
+	// Административные (только для авторизованных)
+	admin := api.PathPrefix("/admin").Subrouter()
+	admin.Use(AuthMiddleware)
+	admin.HandleFunc("/queues/{id}/next", handler.CallNext).Methods("POST")
+	admin.HandleFunc("/queues/{id}/finish", handler.FinishQueue).Methods("POST")
+	admin.HandleFunc("/users/me/queues", handler.GetMyQueues).Methods("GET")
+
+	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	})
 

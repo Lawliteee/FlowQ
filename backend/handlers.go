@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -12,13 +13,74 @@ import (
 
 type Handler struct {
 	store *Store
+	hub   *Hub // WebSocket хаб
+	swaps *SwapStore
 }
 
-func NewHandler(store *Store) *Handler {
-	return &Handler{store: store}
+func NewHandler(store *Store, hub *Hub) *Handler {
+	return &Handler{store: store, hub: hub, swaps: NewSwapStore()}
 }
 
-// CreateQueue создаёт очередь и возвращает ссылку для вступления.
+// Обслуживает WebSocket-подключения к очереди
+func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	queueID := vars["id"]
+	participantID := r.URL.Query().Get("participantId")
+    senderName := r.URL.Query().Get("senderName")
+
+	// Проверяем существование очереди
+	if _, ok := h.store.Get(queueID); !ok {
+		http.Error(w, "Queue not found", http.StatusNotFound)
+		return
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("WebSocket upgrade error: %v", err)
+		return
+	}
+	defer conn.Close()
+
+    h.hub.Subscribe(queueID, participantID, conn)
+    defer h.hub.Unsubscribe(queueID, participantID, conn)
+
+    for {
+        _, msgBytes, err := conn.ReadMessage()
+        if err != nil {
+            break
+        }
+
+        var incoming struct {
+            Type string `json:"type"`
+            Text string `json:"text"`
+        }
+        if err := json.Unmarshal(msgBytes, &incoming); err != nil {
+            continue
+        }
+
+        if incoming.Type == "chat_message" && len(incoming.Text) > 0 {
+            text := incoming.Text
+            if len(text) > 100 {
+                text = text[:100]
+            }
+            msg := map[string]interface{}{
+        		"type":       "chat_message",
+        		"senderName": senderName,
+        		"senderId":   participantID,
+        		"text":       text,
+    		}
+    		// Сохраняем в историю
+    		h.hub.AddToHistory(queueID, ChatMessage{
+        		SenderID:   participantID,
+        		SenderName: senderName,
+        		Text:       text,
+    		})
+    		h.hub.Broadcast(queueID, msg)
+        }
+    }
+}
+
+// Создание очереди
 func (h *Handler) CreateQueue(w http.ResponseWriter, r *http.Request) {
 	var req CreateQueueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -37,8 +99,9 @@ func (h *Handler) CreateQueue(w http.ResponseWriter, r *http.Request) {
 		HasPriority:         req.HasPriority,
 		PriorityCount:       req.PriorityCount,
 		InitialPriority:     req.InitialPriority,
-		AnonymousChat:       req.AnonymousChat,
-		SystemNotifications: req.SystemNotifications,
+		SkipFeature:  		 req.SkipFeature,
+		SkipDuration: 		 req.SkipDuration,
+		ImFreeFeature: 		 req.ImFreeFeature,
 		SwapPositions:       req.SwapPositions,
 		Admins:              req.Admins,
 		CreatedAt:           time.Now(),
@@ -63,7 +126,7 @@ func (h *Handler) CreateQueue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GET /api/queues/{id} – информация об очереди
+// Информация об очереди
 func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -73,48 +136,95 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-		
 	// Читаем текущего участника
-    var currentParticipant *Participant
-    var cpID, cpName sql.NullString
-    h.store.db.QueryRow(`
-        SELECT current_participant_id, current_participant_name
-        FROM queues WHERE id = $1`, id,
-    ).Scan(&cpID, &cpName)
-    if cpID.Valid && cpID.String != "" {
-        currentParticipant = &Participant{ID: cpID.String, Name: cpName.String}
-    }
+	var currentParticipant *Participant
+	var cpID, cpName sql.NullString
+	h.store.db.QueryRow(`
+		SELECT current_participant_id, current_participant_name
+		FROM queues WHERE id = $1`, id,
+	).Scan(&cpID, &cpName)
+	if cpID.Valid && cpID.String != "" {
+		currentParticipant = &Participant{ID: cpID.String, Name: cpName.String}
+	}
+	
+	avgWait := float64(5)
+
+	rows, err := h.store.db.Query(`
+		SELECT wait_time FROM queue_wait_stats
+		WHERE queue_id = $1
+		`, id)
+
+	if err == nil {
+		defer rows.Close()
+
+		total := 0
+		count := 0
+
+		for rows.Next() {
+			var wt int
+			if err := rows.Scan(&wt); err == nil {
+				total += wt
+				count++
+			}
+		}
+
+		if count > 0 {
+			avgWait = float64(total) / float64(count)
+		}
+	}
+
+	etAs := make([]int, len(queue.Participants))
+
+	for i := range queue.Participants {
+		etAs[i] = int(avgWait * float64(i+1))
+	}
+
+	waitTime := 0
+	if len(etAs) > 0 {
+		waitTime = etAs[0]
+	}
+
 
 
 	type QueueInfo struct {
-		ID            string        `json:"id"`
-		Name          string        `json:"name"`
-		StartTime     string        `json:"startTime"`
-		CurrentNumber int           `json:"currentNumber"`
-		Participants  []Participant `json:"participants"`
-		PeopleAhead   int           `json:"peopleAhead"`
-		WaitTime      int           `json:"waitTime"`
-		Finished      bool          `json:"finished"`
-		CurrentParticipant *Participant `json:"currentParticipant"`
-		MaxParticipants int `json:"maxParticipants"`
+		ID                 string        `json:"id"`
+		Name               string        `json:"name"`
+		Description        string        `json:"description"`
+		StartTime          string        `json:"startTime"`
+		CurrentNumber      int           `json:"currentNumber"`
+		Participants       []Participant `json:"participants"`
+		PeopleAhead        int           `json:"peopleAhead"`
+		WaitTime           int           `json:"waitTime"`
+		ETAs               []int         `json:"etAs"`
+		Finished           bool          `json:"finished"`
+		CurrentParticipant *Participant  `json:"currentParticipant"`
+		MaxParticipants    int           `json:"maxParticipants"`
+		ImFreeFeature 	   bool          `json:"imFreeFeature"`
+		SkipFeature  	   bool 		 `json:"skipFeature"`
+		SkipDuration 	   int  		 `json:"skipDuration"`
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(QueueInfo{
-		ID:            queue.ID,
-		Name:          queue.Name,
-		StartTime:     queue.StartTime,
-		CurrentNumber: queue.CurrentNumber,
-		Participants:  queue.Participants,
-		PeopleAhead:   len(queue.Participants),
-		WaitTime:      len(queue.Participants) * 5, // заглушка: 5 мин на человека
-		Finished:      queue.Finished,
+		ID:                 queue.ID,
+		Name:               queue.Name,
+		Description:        queue.Description,
+		StartTime:          queue.StartTime,
+		CurrentNumber:      queue.CurrentNumber,
+		Participants:       queue.Participants,
+		PeopleAhead:        len(queue.Participants),
+		WaitTime:           waitTime,
+		ETAs:               etAs,
+		Finished:           queue.Finished,
 		CurrentParticipant: currentParticipant,
-		MaxParticipants: queue.MaxParticipants,
+		MaxParticipants:    queue.MaxParticipants,
+		ImFreeFeature: 		queue.ImFreeFeature,
+		SkipFeature:  		queue.SkipFeature,
+		SkipDuration: 		queue.SkipDuration,	
 	})
 }
 
-// POST /api/queues/{id}/join – вступление в очередь
+// Вступление в очередь
 func (h *Handler) JoinQueue(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -134,7 +244,6 @@ func (h *Handler) JoinQueue(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Queue is full", http.StatusConflict)
 		return
 	}
-	
 
 	participant := Participant{
 		ID:       uuid.New().String(),
@@ -143,6 +252,18 @@ func (h *Handler) JoinQueue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.store.AddParticipant(id, participant)
+
+	if req.UserID != "" {
+    	h.store.SaveUserParticipant(req.UserID, id, participant.ID)
+	}
+
+	// Отправляем обновление всем, кто слушает WebSocket
+	if q, ok := h.store.Get(id); ok {
+		h.hub.Broadcast(id, map[string]interface{}{
+			"type": "queue_update",
+			"data": q,
+		})
+	}
 
 	queue, _ = h.store.Get(id)
 
@@ -158,7 +279,7 @@ func (h *Handler) JoinQueue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// POST /api/admin/queues/{id}/next – вызвать следующего участника
+// Вызвать следующего участника
 func (h *Handler) CallNext(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -174,21 +295,31 @@ func (h *Handler) CallNext(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.store.ShiftParticipant(id)
-	queue, _ = h.store.Get(id)
+
+	// Получаем обновлённую очередь
+	updatedQueue, _ := h.store.Get(id)
+
+	// Отправляем обновление всем через WebSocket
+	h.hub.Broadcast(id, map[string]interface{}{
+		"type": "queue_update",
+		"data": updatedQueue,
+	})
 
 	type NextResponse struct {
-		CurrentNumber int           `json:"currentNumber"`
-		Participants  []Participant `json:"participants"`
+		CurrentNumber      int           `json:"currentNumber"`
+		Participants       []Participant `json:"participants"`
+		CurrentParticipant *Participant  `json:"currentParticipant"`
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(NextResponse{
-		CurrentNumber: queue.CurrentNumber,
-		Participants:  queue.Participants,
+		CurrentNumber:      updatedQueue.CurrentNumber,
+		Participants:       updatedQueue.Participants,
+		CurrentParticipant: updatedQueue.CurrentParticipant,
 	})
 }
 
-// POST /api/admin/queues/{id}/finish – завершить очередь
+// Завершить очередь
 func (h *Handler) FinishQueue(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -198,12 +329,221 @@ func (h *Handler) FinishQueue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.store.FinishQueue(id)
+
+	// Отправляем обновление всем, кто слушает WebSocket
+	if q, ok := h.store.Get(id); ok {
+		h.hub.Broadcast(id, map[string]interface{}{
+			"type": "queue_update",
+			"data": q,
+		})
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
-
+// Покинуть очередь
 func (h *Handler) LeaveQueue(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    h.store.RemoveParticipant(vars["id"], vars["participantId"])
+	vars := mux.Vars(r)
+	h.store.RemoveParticipant(vars["id"], vars["participantId"])
+
+	// Отправляем обновление всем, кто слушает WebSocket
+	if q, ok := h.store.Get(vars["id"]); ok {
+		h.hub.Broadcast(vars["id"], map[string]interface{}{
+			"type": "queue_update",
+			"data": q,
+		})
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// POST /api/queues/{id}/swap/request
+func (h *Handler) SwapRequest(w http.ResponseWriter, r *http.Request) {
+    queueID := mux.Vars(r)["id"]
+
+    var req SwapRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid body", http.StatusBadRequest)
+        return
+    }
+
+    offer := &SwapOffer{
+        ID:       uuid.New().String(),
+        QueueID:  queueID,
+        FromID:   req.FromID,
+        FromName: req.FromName,
+        ToID:     req.ToID,
+    }
+    h.swaps.Add(offer)
+
+	// Находим позицию fromID в очереди
+	queue, _ := h.store.Get(queueID)
+	fromPos := 0
+	for i, p := range queue.Participants {
+		if p.ID == req.FromID {
+			fromPos = i + 1
+			break
+		}
+	}
+
+    // Шлём уведомление только целевому участнику через WS
+    h.hub.BroadcastTo(queueID, req.ToID, map[string]interface{}{
+        "type": "swap_request",
+        "swapId":   offer.ID,
+        "fromId":   req.FromID,
+        "fromName": req.FromName,
+		"fromPos":  fromPos,
+    })
+
     w.WriteHeader(http.StatusOK)
+}
+
+// POST /api/queues/{id}/swap/respond
+func (h *Handler) SwapRespond(w http.ResponseWriter, r *http.Request) {
+    queueID := mux.Vars(r)["id"]
+
+    var req SwapRespondRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid body", http.StatusBadRequest)
+        return
+    }
+
+    offer, ok := h.swaps.Take(req.SwapID)
+    if !ok {
+        http.Error(w, "Swap not found or expired", http.StatusNotFound)
+        return
+    }
+
+    if req.Accept {
+        if err := h.store.SwapParticipants(queueID, offer.FromID, offer.ToID); err != nil {
+            http.Error(w, "Swap failed", http.StatusInternalServerError)
+            return
+        }
+        // Всем обновление очереди
+        if q, ok := h.store.Get(queueID); ok {
+            h.hub.Broadcast(queueID, map[string]interface{}{
+                "type": "queue_update",
+                "data": q,
+            })
+        }
+    } else {
+        // Достаём имя отказавшего участника
+        var declinerName string
+        h.store.db.QueryRow(`SELECT name FROM participants WHERE id = $1`, offer.ToID).Scan(&declinerName)
+
+        h.hub.BroadcastTo(queueID, offer.FromID, map[string]interface{}{
+            "type":     "swap_declined",
+            "fromName": declinerName,
+        })
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+
+// POST /api/queues/{id}/im-free – участник освободился, вызываем следующего
+func (h *Handler) ImFree(w http.ResponseWriter, r *http.Request) {
+    queueID := mux.Vars(r)["id"]
+
+    queue, ok := h.store.Get(queueID)
+    if !ok {
+        http.Error(w, "Queue not found", http.StatusNotFound)
+        return
+    }
+
+    // Если есть следующие — вызываем
+    if len(queue.Participants) > 0 {
+        h.store.ShiftParticipant(queueID)
+    } else {
+        // Очередь пуста — просто сбрасываем текущего
+        h.store.ClearCurrentParticipant(queueID)
+    }
+
+    if q, ok := h.store.Get(queueID); ok {
+        h.hub.Broadcast(queueID, map[string]interface{}{
+            "type": "queue_update",
+            "data": q,
+        })
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+
+// POST /api/queues/{id}/skip
+func (h *Handler) SkipMe(w http.ResponseWriter, r *http.Request) {
+    queueID := mux.Vars(r)["id"]
+
+    var body struct {
+        ParticipantID string `json:"participantId"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.ParticipantID == "" {
+        http.Error(w, "Invalid body", http.StatusBadRequest)
+        return
+    }
+
+    queue, ok := h.store.Get(queueID)
+    if !ok {
+        http.Error(w, "Queue not found", http.StatusNotFound)
+        return
+    }
+
+    duration := time.Duration(queue.SkipDuration) * time.Minute
+    if err := h.store.SkipParticipant(queueID, body.ParticipantID, duration); err != nil {
+        http.Error(w, "Skip failed", http.StatusInternalServerError)
+        return
+    }
+
+    h.store.ExpireSkips(queueID)
+
+    if q, ok := h.store.Get(queueID); ok {
+        h.hub.Broadcast(queueID, map[string]interface{}{
+            "type": "queue_update",
+            "data": q,
+        })
+    }
+    w.WriteHeader(http.StatusOK)
+}
+
+// POST /api/queues/{id}/return
+func (h *Handler) ReturnMe(w http.ResponseWriter, r *http.Request) {
+    queueID := mux.Vars(r)["id"]
+
+    var body struct {
+        ParticipantID string `json:"participantId"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.ParticipantID == "" {
+        http.Error(w, "Invalid body", http.StatusBadRequest)
+        return
+    }
+
+    if err := h.store.ReturnParticipant(queueID, body.ParticipantID); err != nil {
+        http.Error(w, "Return failed", http.StatusInternalServerError)
+        return
+    }
+
+    if q, ok := h.store.Get(queueID); ok {
+        h.hub.Broadcast(queueID, map[string]interface{}{
+            "type": "queue_update",
+            "data": q,
+        })
+    }
+    w.WriteHeader(http.StatusOK)
+}
+
+// GET /api/users/me/queues – очереди текущего пользователя
+func (h *Handler) GetMyQueues(w http.ResponseWriter, r *http.Request) {
+    userID := UserIDFromContext(r.Context())
+    if userID == "" {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    adminQueues, participantQueues, err := h.store.GetUserQueues(userID)
+    if err != nil {
+        http.Error(w, "Failed to fetch queues", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "adminQueues":       adminQueues,
+        "participantQueues": participantQueues,
+    })
 }

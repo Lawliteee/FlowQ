@@ -8,8 +8,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// NewDB открывает соединение с PostgreSQL.
-// Строка подключения берётся из переменной окружения DATABASE_URL.
+// Открывает соединение с PostgreSQL. Строка подключения берётся из переменной окружения DATABASE_URL.
 func NewDB() *sql.DB {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
@@ -29,17 +28,25 @@ func NewDB() *sql.DB {
 	return db
 }
 
-// RunMigrations применяет начальную схему из SQL-файла.
-// При повторном запуске безопасно — использует IF NOT EXISTS.
+// Применяет все миграции по порядку
 func RunMigrations(db *sql.DB) {
-	migration, err := os.ReadFile("migrations/001_init.sql")
-	if err != nil {
-		log.Fatalf("Не удалось прочитать файл миграции: %v", err)
+	migrations := []string{
+		"migrations/001_init.sql",
+		"migrations/002_users.sql",
+		"migrations/003_rename_system_notifications.sql",
+		"migrations/004_skip.sql",
+		"migrations/005_skip_feature.sql",
+		"migrations/006_user_queues.sql",
 	}
 
-	if _, err := db.Exec(string(migration)); err != nil {
-		log.Fatalf("Ошибка выполнения миграции: %v", err)
+	for _, path := range migrations {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			log.Fatalf("Не удалось прочитать файл миграции %s: %v", path, err)
+		}
+		if _, err := db.Exec(string(data)); err != nil {
+			log.Fatalf("Ошибка выполнения миграции %s: %v", path, err)
+		}
+		log.Printf("Миграция применена: %s", path)
 	}
-
-	log.Println("Миграции применены")
 }

@@ -6,6 +6,9 @@ type Participant struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Priority int    `json:"priority"` // 0 — обычный, >0 — приоритетный
+	Skipped          bool       `json:"skipped"`
+    SkipUntil        *time.Time `json:"skipUntil,omitempty"`
+    OriginalPosition int        `json:"originalPosition"`
 }
 
 type Queue struct {
@@ -17,8 +20,9 @@ type Queue struct {
 	HasPriority         bool          `json:"hasPriority"`
 	PriorityCount       int           `json:"priorityCount"`
 	InitialPriority     int           `json:"initialPriority"` // стартовое значение приоритета для новых участников
-	AnonymousChat       bool          `json:"anonymousChat"`
-	SystemNotifications bool          `json:"systemNotifications"`
+	SkipFeature   		bool 		  `json:"skipFeature"`
+	SkipDuration  		int  		  `json:"skipDuration"`
+	ImFreeFeature 		bool 		  `json:"imFreeFeature"`
 	SwapPositions       bool          `json:"swapPositions"`
 	Admins              []string      `json:"admins"`
 	CreatedAt           time.Time     `json:"createdAt"`
@@ -36,18 +40,31 @@ type CreateQueueRequest struct {
 	HasPriority         bool     `json:"hasPriority"`
 	PriorityCount       int      `json:"priorityCount"`
 	InitialPriority     int      `json:"initialPriority"`
-	AnonymousChat       bool     `json:"anonymousChat"`
-	SystemNotifications bool     `json:"systemNotifications"`
+	SkipFeature  		bool     `json:"skipFeature"`
+	SkipDuration 		int  	 `json:"skipDuration"`
+	ImFreeFeature 		bool 	 `json:"imFreeFeature"`
 	SwapPositions       bool     `json:"swapPositions"`
 	Admins              []string `json:"admins"`
 }
 
 type JoinQueueRequest struct {
 	Name string `json:"name"`
+	UserID string `json:"userId"`
 }
 
 type QueueResponse struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	Link string `json:"link"`
+}
+
+type SwapRequest struct {
+    FromID   string `json:"fromId"`
+    FromName string `json:"fromName"`
+    ToID     string `json:"toId"`
+}
+
+type SwapRespondRequest struct {
+    SwapID  string `json:"swapId"`
+    Accept  bool   `json:"accept"`
 }
