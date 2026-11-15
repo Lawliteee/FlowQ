@@ -3,6 +3,8 @@
     <h1>Создание очереди</h1>
 
     <section class="form-panel">
+
+      <!-- Название очереди -->
       <div class="form-row first-row">
         <label class="form-label" for="queueName">Название очереди</label>
         <div class="form-control">
@@ -10,6 +12,7 @@
         </div>
       </div>
 
+      <!-- Описание -->
       <div class="form-row">
         <label class="form-label" for="description">Описание</label>
         <div class="form-control">
@@ -25,6 +28,7 @@
         </div>
       </div>
 
+      <!-- Время начала и макс. учатников -->
       <div class="form-row">
         <div class="inline-fields">
           <div class="inline-field">
@@ -38,6 +42,7 @@
         </div>
       </div>
 
+      <!-- Приоритеты -->
       <div class="form-row">
         <div class="priority-row disabled">
           <label class="checkbox-item">
@@ -69,6 +74,7 @@
         </div>
       </div>
 
+      <!-- Администраторы -->
       <div class="form-row disabled">
         <span class="form-label">Администраторы</span>
         <div class="form-control">
