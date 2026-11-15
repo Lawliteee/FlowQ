@@ -21,7 +21,7 @@ func NewHandler(store *Store, hub *Hub) *Handler {
 	return &Handler{store: store, hub: hub, swaps: NewSwapStore()}
 }
 
-// HandleWebSocket – обслуживает WebSocket-подключения к очереди
+// Обслуживает WebSocket-подключения к очереди
 func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queueID := vars["id"]
@@ -51,7 +51,7 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST /api/queues – создание очереди
+// Создание очереди
 func (h *Handler) CreateQueue(w http.ResponseWriter, r *http.Request) {
 	var req CreateQueueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -96,7 +96,7 @@ func (h *Handler) CreateQueue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GET /api/queues/{id} – информация об очереди
+// Информация об очереди
 func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -186,7 +186,7 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// POST /api/queues/{id}/join – вступление в очередь
+// Вступление в очередь
 func (h *Handler) JoinQueue(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -237,7 +237,7 @@ func (h *Handler) JoinQueue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// POST /api/admin/queues/{id}/next – вызвать следующего участника
+// Вызвать следующего участника
 func (h *Handler) CallNext(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -277,7 +277,7 @@ func (h *Handler) CallNext(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// POST /api/admin/queues/{id}/finish – завершить очередь
+// Завершить очередь
 func (h *Handler) FinishQueue(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -298,7 +298,7 @@ func (h *Handler) FinishQueue(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// DELETE /api/queues/{id}/participants/{participantId} – покинуть очередь
+// Покинуть очередь
 func (h *Handler) LeaveQueue(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	h.store.RemoveParticipant(vars["id"], vars["participantId"])
