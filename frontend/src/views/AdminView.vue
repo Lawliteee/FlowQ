@@ -68,6 +68,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+import api from '../utils/api.js'
 import ChatModal from '../components/ChatModal.vue'
 
 let pollTimer = null
@@ -111,7 +112,7 @@ onUnmounted(() => clearInterval(pollTimer))
 async function fetchQueue() {
   const queueId = route.params.id
   try {
-    const response = await axios.get(`http://localhost:8080/api/queues/${queueId}`)
+    const response = await api.get(`/queues/${queueId}`)
     const data = response.data
 
     queue.value = {
@@ -140,9 +141,7 @@ function copyId() {
 
 // Вызываем следующего участника
 async function callNext() {
-  const response = await axios.post(
-    `http://localhost:8080/api/admin/queues/${route.params.id}/next`,
-  )
+  const response = await api.post(`/admin/queues/${route.params.id}/next`)
   queue.value.currentNumber = response.data.currentNumber
   queue.value.participants = response.data.participant
   queue.value.currentParticipant = response.data.currentParticipant ?? null
@@ -160,7 +159,7 @@ async function removeParticipant(participantId) {
 
 // Завершаем очередь
 async function finishQueue() {
-  await axios.post(`http://localhost:8080/api/admin/queues/${route.params.id}/finish`)
+  await api.post(`/admin/queues/${route.params.id}/finish`)
   router.push('/')
 }
 </script>

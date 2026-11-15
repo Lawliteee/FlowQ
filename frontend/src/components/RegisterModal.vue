@@ -10,6 +10,8 @@
         <input v-model="password" type="password" placeholder="Пароль" class="modal-input" />
       </div>
 
+      <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+
       <label class="checkbox-label">
         <input v-model="agreed" type="checkbox" class="checkbox" />
         <span>Согласен с пользовательским соглашением</span>
@@ -27,6 +29,7 @@
 <script setup>
 import { ref } from 'vue'
 import { saveUser } from '../utils/auth.js'
+import axios from 'axios'
 
 const emit = defineEmits(['close', 'switch-to-login', 'registered'])
 
@@ -35,16 +38,26 @@ const email = ref('')
 const password = ref('')
 const agreed = ref(false)
 
-function register() {
-  // TODO
-  // const res = await axios.post('/api/auth/register', { name, email, password })
-  // saveUser(res.data.user)
-  // emit('registered', res.data.user)
+const errorMsg = ref('')
 
-  // Заглушка
-  const user = { name: name.value, email: email.value }
-  saveUser(user)
-  emit('registered', user)
+async function register() {
+  try {
+    const res = await axios.post('http://localhost:8080/api/auth/register', {
+      email: email.value,
+      password: password.value,
+      displayName: name.value,
+    })
+    saveUser(res.data.user, res.data.token)
+    emit('registered', res.data.user)
+  } catch (err) {
+    if (err.response?.status === 409) {
+      errorMsg.value = 'Email уже зарегистрирован'
+    } else if (err.response?.status === 400) {
+      errorMsg.value = 'Пароль минимум 6 символов'
+    } else {
+      errorMsg.value = 'Ошибка регистрации'
+    }
+  }
 }
 </script>
 

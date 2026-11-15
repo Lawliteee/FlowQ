@@ -44,7 +44,7 @@ const canSubmit = computed(() => userName.value.trim() !== '' && queueId.value.t
 
 onMounted(() => {
   const user = getUser()
-  if (user?.name) userName.value = user.name
+  if (user?.displayName) userName.value = user.displayName
 })
 
 // Переход в очередь
