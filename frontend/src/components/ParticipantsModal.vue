@@ -28,7 +28,7 @@
 
 import { computed } from 'vue'
 
-defineEmits(['close'])
+const emit = defineEmits(['close', 'swap-requested'])
 
 const props = defineProps({
   participants: { type: Array, default: () => [] },
@@ -43,12 +43,7 @@ const displayedParticipants = computed(() => {
 
 // Предлагает другому пользователю обмен местами
 function requestSwap(targetParticipant) {
-  // TODO
-  // await axios.post(`/api/queues/${queueId}/swap`, {
-  //   participantId: myId,
-  //   targetId: targetParticipant.id
-  // })
-  console.log('swap requested with ', targetParticipant.name)
+  emit('swap-requested', targetParticipant)
 }
 
 </script>
