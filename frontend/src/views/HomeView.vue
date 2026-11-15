@@ -16,9 +16,11 @@
         </div>
         <div class="role-card">
           <span class="role-label">Организатор</span>
-          <button class="btn-primary2" @click="router.push('/create-queue')">
+          <button class="btn-primary2" :class="{ 'btn-disabled': !currentUser }"
+            :disabled="!currentUser" @click="handleCreateQueue">
             Создать очередь
           </button>
+          <p v-if="!currentUser" class="auth-hint">Необходимо авторизоваться</p>
         </div>
       </div>
     </section>
@@ -28,12 +30,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import JoinQueueModal from '../components/JoinModal.vue'
+import { getUser } from '../utils/auth.js'
 
 const router = useRouter()
 const modalOpen = ref(false) // Открыто ли окно
+const currentUser = ref(null)
+
+onMounted(() => {
+  currentUser.value = getUser()
+})
+
+function handleCreateQueue() {
+  if (!currentUser.value) return
+  router.push('/create-queue')
+}
 </script>
 
 <style scoped>
@@ -161,5 +174,22 @@ h1 {
     border-top: 2px solid var(--divider);
     padding-top: 24px;
   }
+}
+
+.btn-disabled {
+  background: #6d6d6d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-disabled:hover {
+  background: #535353;
+}
+
+.auth-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 </style>
