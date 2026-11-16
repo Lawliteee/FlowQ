@@ -520,6 +520,21 @@ async function returnMe() {
   z-index: 100;
 }
 
+/* Кнопка пропуска */
+.btn-return {
+  background: #de8900;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Fira Sans', sans-serif;
+  transition: background 0.2s;
+}
+.btn-return:hover { background: #c95e00; }
+
 @media (max-width: 768px) {
   .page-body {
     padding: 0 16px;
