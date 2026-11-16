@@ -13,7 +13,13 @@
 
     <!-- Информация об очереди -->
     <section class="queue-info">
-      <h2 class="queue-title">{{ queueTitle }}</h2>
+      <div class="queue-title-wrapper">
+        <h2 class="queue-title">{{ queueTitle }}</h2>
+        <div v-show="queueDescription" class="info-icon" data-tooltip="" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
+          i
+        <div v-if="showTooltip" class="tooltip">{{ queueDescription }}</div>
+        </div>
+      </div>
     </section>
     <section class="content">
       <p v-if="waitTime === -1" class="your-turn">Ваша очередь!</p>
@@ -97,6 +103,8 @@ const currentNumber = ref(0)
 const currentParticipant = ref(null)
 const pendingSwapId = ref(null)
 const swapEnabled = ref(false)
+const queueDescription = ref('')
+const showTooltip = ref(false)
 
 let ws = null
 onMounted(async () => {
@@ -111,6 +119,7 @@ onUnmounted(() => {
 
 function connectWS() {
   const queueId = route.params.id
+    if (!queueId) return
     const participantId = getCookie('participantId') ?? ''
     ws = new WebSocket(
       `ws://localhost:8080/api/ws/queue/${queueId}?participantId=${participantId}`
@@ -133,15 +142,21 @@ function connectWS() {
     }
   }
 
-  ws.onclose = () => { setTimeout(connectWS, 2000) }
+  ws.onclose = () => {
+    const queueId = route.params.id
+    if (queueId) setTimeout(connectWS, 2000)
+  }
 }
 
 async function fetchQueue() {
   const queueId = route.params.id
+  console.log('queueId:', queueId)
   try {
     const response = await axios.get(`http://localhost:8080/api/queues/${queueId}`)
+    console.log('response:', response.data)
     handleUpdate(response.data)
   } catch (error) {
+    console.error('fetchQueue error:', error)
     router.push('/')
   }
 }
@@ -152,6 +167,8 @@ function handleUpdate(data) {
   currentParticipant.value = data.currentParticipant ?? null
   imFreeFeature.value = data.imFreeFeature ?? false
   swapEnabled.value = data.swapPositions ?? false
+  queueDescription.value = data.description ?? ''
+  queueTitle.value = data.name
 
   if (data.finished) {
     ws?.close()
@@ -179,9 +196,12 @@ function handleUpdate(data) {
     return
   }
 
-  queueTitle.value = data.name
   peopleAhead.value = myPos
-  waitTime.value = myPos * 5
+  if (myPos === -1) {
+    waitTime.value = null
+  } else {
+    waitTime.value = data.etAs?.[myPos] ?? null
+  }
 }
 
 async function imFree() {
@@ -411,6 +431,45 @@ async function onSwapRequested(targetParticipant) {
 .btn-skip:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Информация об очереди */
+.queue-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.info-icon {
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  position: relative;
+  user-select: none;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2c2c2c;
+  color: white;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 8px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 100;
 }
 
 @media (max-width: 768px) {
