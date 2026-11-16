@@ -166,6 +166,8 @@ function connectWS() {
       if (chatMessages.value.length > 20) {
         chatMessages.value.shift()
       }
+    } else if (msg.type === 'chat_history') {
+      chatMessages.value = msg.messages
     }
   }
 
