@@ -61,7 +61,7 @@
   </div>
 
   <!-- Модалки -->
-  <ChatModal v-if="showChat" @close="showChat = false" />
+  <ChatModal v-if="showChat" :messages="chatMessages" myId="admin" :ws="ws" @close="showChat = false"/>
 </template>
 
 <script setup>
@@ -72,6 +72,7 @@ import api from '../utils/api.js'
 import ChatModal from '../components/ChatModal.vue'
 
 const showChat = ref(false)
+const chatMessages = ref([])
 
 const notStarted = computed(() => queue.value.currentNumber === 0)
 
@@ -113,7 +114,9 @@ onUnmounted(() => {
 
 function connectWS() {
   const queueId = route.params.id
-  ws = new WebSocket(`ws://localhost:8080/api/ws/queue/${queueId}`)
+  ws = new WebSocket(
+    `ws://localhost:8080/api/ws/queue/${queueId}?participantId=admin&senderName=${encodeURIComponent('Администратор')}`
+  )
 
   ws.onmessage = (event) => {
     const msg = JSON.parse(event.data)
@@ -127,6 +130,9 @@ function connectWS() {
         participants: data.participants || [],
         currentParticipant: data.currentParticipant || null,
       }
+    } else if (msg.type === 'chat_message') {
+      chatMessages.value.push({ senderId: msg.senderId, senderName: msg.senderName, text: msg.text,})
+      if (chatMessages.value.length > 20) chatMessages.value.shift()
     }
   }
 
