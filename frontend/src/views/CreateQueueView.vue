@@ -39,6 +39,10 @@
             <label class="inline-label">Макс. участников</label>
             <input type="text" class="form-input input-small" v-model="maxParticipants" />
           </div>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="swapPositions" />
+            <span>Обмен позициями</span>
+          </label>
         </div>
       </div>
 
@@ -63,18 +67,14 @@
             <span>Функция "Пропустить меня"</span>
           </label>
           <div class="inline-field">
-            <input type="number" class="form-input input-small" v-model="skipDuration" :disabled="!skipFeature" min="1" max="99"/>
+            <input type="number" class="form-input new-input-small" v-model="skipDuration" :disabled="!skipFeature" min="1" max="99"/>
             <label class="inline-label">мин.</label>
           </div>
           <label class="checkbox-item">
             <input type="checkbox" v-model="imFreeFeature" />
             <span>Функция "Я освободился"</span>
           </label>
-          <label class="checkbox-item">
-            <input type="checkbox" v-model="swapPositions" />
-            <span>Обмен позициями</span>
-          </label>
-          <span class="info-icon" title="Участники могут меняться местами в очереди">i</span>
+          <span class="info-icon" title="Пропустить меня - участник временно становится в конец очереди; Я освободился - участники могут без администратора двигать очередь">i</span>
         </div>
       </div>
 
@@ -197,7 +197,7 @@ h1 {
   font-weight: 400;
   color: var(--text);
   text-align: center;
-  max-width: 700px;
+  max-width: 790px;
   width: 100%;
   margin-bottom: 24px;
 }
@@ -456,6 +456,12 @@ input[type='checkbox'] {
 .form-input:disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.new-input-small {
+  width: 60px;
+  padding-right: 0px;
+  margin-right: 0px;
 }
 
 @media (max-width: 768px) {
