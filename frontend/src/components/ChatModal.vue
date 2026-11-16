@@ -13,7 +13,9 @@
           :class="msg.senderId === myId ? 'msg-wrapper--mine' : 'msg-wrapper--theirs'"
         >
           <div class="msg-bubble" :class="msg.senderId === myId ? 'msg-bubble--mine' : ''">
-            <span class="msg-sender">{{ msg.senderName }}</span>
+            <span class="msg-sender" :class="{ 'msg-sender--admin': msg.senderName === 'Администратор' }">
+              {{ msg.senderName }}
+            </span>
             <p class="msg-text">{{ msg.text }}</p>
           </div>
         </div>
@@ -177,4 +179,9 @@ h3 { font-size: 17px; font-weight: 500; color: var(--text); margin: 0; }
   padding-top: 4px;
 }
 .btn-send:hover { background: var(--primary); }
+
+.msg-sender--admin {
+  color: #e85656;
+}
+
 </style>
