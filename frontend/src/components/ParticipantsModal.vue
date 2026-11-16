@@ -8,9 +8,7 @@
       </div>
       <div class="participants-list">
         <div v-for="(p, idx) in displayedParticipants"
-          :key="p.id"
-          class="participant-row"
-          :class="{ 'participant-row--first': idx === 0 }"
+          :key="p.id" class="participant-row" :class="{ 'participant-row--first': idx === 0 }"
         >
           <span class="p-number">{{ idx + 1 }}.</span>
           <span class="p-name">{{ p.name }}</span>

@@ -33,11 +33,11 @@
         <div class="inline-fields">
           <div class="inline-field">
             <label class="inline-label">Время начала</label>
-            <input type="time" class="form-input select-sm" v-model="startTime" />
+            <input type="time" class="form-input select-small" v-model="startTime" />
           </div>
           <div class="inline-field">
             <label class="inline-label">Макс. участников</label>
-            <input type="text" class="form-input input-sm" v-model="maxParticipants" />
+            <input type="text" class="form-input input-small" v-model="maxParticipants" />
           </div>
         </div>
       </div>
@@ -286,13 +286,13 @@ h1 {
   color: var(--text);
 }
 
-.select-sm {
+.select-small {
   width: auto;
   cursor: pointer;
   padding: 9px 10px;
 }
 
-.input-sm {
+.input-small {
   width: 70px;
 }
 
