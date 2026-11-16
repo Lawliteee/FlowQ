@@ -17,7 +17,7 @@
           <img src="/icons/avatar.png" alt="аккаунт" width="36" height="36" />
         </button>
         <AccountModal v-if="accountOpen" :user="currentUser" :adminQueues="adminQueues"
-          :participantQueues="participantQueues" @close="accountOpen = false" @logout="logout"
+          :participantQueues="participantQueues" :canLogout="canLogout" @close="accountOpen = false" @logout="logout"
           @go-to-admin="(id) => { accountOpen = false; router.push(`/admin/${id}`) }"
           @go-to-queue="goToQueue"/>
       </div>
@@ -47,6 +47,10 @@ function goToQueue(q) {
 
 import { useRouter } from 'vue-router'
 const router = useRouter()
+
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
 
 const loginOpen = ref(false)
 const registerOpen = ref(false)
@@ -93,6 +97,10 @@ function onAuth(user) {
   registerOpen.value = false
   fetchMyQueues()
 }
+
+const canLogout = computed(() => {
+  return route.name !== 'queue' && route.name !== 'admin'
+})
 
 function logout() {
   clearUser()
