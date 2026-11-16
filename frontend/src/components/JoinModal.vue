@@ -80,7 +80,7 @@ async function submitQueue() {
       name: userName.value.trim(),
       userId: getUser()?.id ?? '',
     })
-    setCookie('participantId', response.data.participantId, 7)
+    setCookie(`participantId_${id}`, response.data.participantId, 7)
     router.push(`/queue/${id}`)
     emit('close')
   } catch (err) {
