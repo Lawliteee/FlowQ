@@ -8,7 +8,7 @@
       <div class="form-row first-row">
         <label class="form-label" for="queueName">Название очереди</label>
         <div class="form-control">
-          <input id="queueName" type="text" class="form-input" v-model="queueName" />
+          <input id="queueName" type="text" class="form-input" v-model="queueName" :maxlength="NAME_MAX" />
         </div>
       </div>
 
@@ -37,7 +37,8 @@
           </div>
           <div class="inline-field">
             <label class="inline-label">Макс. участников</label>
-            <input type="text" class="form-input input-small" v-model="maxParticipants" />
+            <input type="text" inputmode="numeric" maxlength="3" class="form-input input-small"
+              :value="maxParticipants" @input="maxParticipants = digits($event)" />
           </div>
           <label class="checkbox-item">
             <input type="checkbox" v-model="swapPositions" />
@@ -71,7 +72,8 @@
             <span>Функция "Пропустить меня"</span>
           </label>
           <div class="inline-field">
-            <input type="number" class="form-input new-input-small" v-model="skipDuration" :disabled="!skipFeature" min="1" max="99"/>
+            <input type="text" inputmode="numeric" maxlength="3" class="form-input new-input-small"
+              :value="skipDuration" @input="skipDuration = digits($event)" :disabled="!skipFeature" />
             <label class="inline-label">мин.</label>
           </div>
           <label class="checkbox-item">
@@ -128,6 +130,14 @@ const createdQueueId = ref(null)
 const idCopied = ref(false) // ID уже скопирован в буфер автоматически
 const DESCRIPTION_MAX = 300
 
+const NAME_MAX = 50
+
+function digits(e, max = 3) {
+  const v = e.target.value.replace(/\D/g, '').slice(0, max)
+  e.target.value = v
+  return v
+}
+
 const queueName = ref('')
 const description = ref('')
 const startTime = ref('12:00')
@@ -156,15 +166,15 @@ const createQueue = async () => {
     }
     const payload = {
       // Объект с данными
-      queueName: queueName.value,
+      queueName: queueName.value.trim().slice(0, NAME_MAX),
       description: description.value.slice(0, DESCRIPTION_MAX),
       startTime: startTime.value,
-      maxParticipants: parseInt(maxParticipants.value) || 0,
+      maxParticipants: Math.min(parseInt(maxParticipants.value) || 0, 999),
       hasPriority: hasPriority.value,
       priorityCount: parseInt(priorityCount.value) || 0,
       initialPriority: parseInt(initialPriority.value) || 0,
       skipFeature: skipFeature.value,
-      skipDuration: parseInt(skipDuration.value) || 10,
+      skipDuration: Math.min(Math.max(parseInt(skipDuration.value) || 10, 1), 999),
       imFreeFeature: imFreeFeature.value,
       swapPositions: swapPositions.value,
       admins: [getUser()?.id, ...admins.value].filter(Boolean)
