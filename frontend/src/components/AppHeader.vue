@@ -3,13 +3,10 @@
     <router-link to="/" class="logo-link">
       <img class="logo" src="/logo.png" alt="FlowQ logo" />
     </router-link>
-    <span class="header-title">FlowQ</span>
+
     <nav class="header-nav">
       <!-- Незалогинен -->
-      <template v-if="!currentUser">
-        <a href="#" @click.prevent="openLogin">Войти</a>
-        <a href="#" @click.prevent="openRegister">Зарегистрироваться</a>
-      </template>
+      <a v-if="!currentUser" href="#" @click.prevent="openLogin">Войти</a>
 
       <!-- Залогинен -->
       <div v-else class="avatar-wrap" ref="avatarRef">
@@ -74,7 +71,8 @@ async function fetchMyQueues() {
     const data = await res.json()
     adminQueues.value = data.adminQueues ?? []
     participantQueues.value = data.participantQueues ?? []
-  } catch {}
+  } catch { console.log("ой ой");
+  }
 }
 
 onMounted(() => {
@@ -112,12 +110,6 @@ function logout() {
 function openLogin() {
   loginOpen.value = true
   registerOpen.value = false
-}
-
-// Открываем модальное окно Регистрации
-function openRegister() {
-  registerOpen.value = true
-  loginOpen.value = false
 }
 
 // Переключаемся с Логина на Регистрацию
@@ -180,14 +172,14 @@ header {
   z-index: 1;
 }
 .header-nav a {
-  color: var(--text);
+  color: #ffffff;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 500;
   opacity: 0.95;
 }
 
-.header-nav a:hover { opacity: 0.7; }
+.header-nav a:hover { opacity: 0.8; }
 
 /* Аватарка */
 .avatar-btn {

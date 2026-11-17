@@ -81,7 +81,7 @@ import SwapRequestModal from '../components/SwapRequestModal.vue'
 import ChatModal from '../components/ChatModal.vue'
 import KickedModal from '../components/KickedModal.vue'
 import SwapDeclinedModal from '../components/SwapDeclinedModal.vue'
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 
