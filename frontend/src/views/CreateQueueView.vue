@@ -53,10 +53,14 @@
             <input type="checkbox" v-model="hasPriority" />
             <span>Приоритеты</span>
           </label>
-          <label class="inline-label ml">Количество приоритетов</label>
-          <input type="text" class="form-input input-sm" v-model="priorityCount" />
-          <label class="inline-label ml">Начальный приоритет</label>
-          <input type="text" class="form-input input-sm" v-model="initialPriority" />
+          <div class="inline-field">
+            <label class="inline-label">Количество приоритетов</label>
+            <input type="text" class="form-input input-sm" v-model="priorityCount" />
+          </div>
+          <div class="inline-field">
+            <label class="inline-label">Начальный приоритет</label>
+            <input type="text" class="form-input input-sm" v-model="initialPriority" />
+          </div>
         </div>
       </div>
 
@@ -307,10 +311,15 @@ h1 {
   margin-left: 16px;
 }
 
+.input-sm {
+  width: 70px;
+  flex: 0 0 70px;
+}
+
 .priority-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px 24px;
   flex-wrap: wrap;
   flex: 1;
 }
