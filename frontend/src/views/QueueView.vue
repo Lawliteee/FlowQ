@@ -480,6 +480,7 @@ async function returnMe() {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
 }
 
@@ -540,7 +541,10 @@ async function returnMe() {
   font-weight: 400;
   padding: 8px 12px;
   border-radius: 8px;
-  white-space: nowrap;
+  white-space: normal;
+  width: max-content;
+  max-width: min(280px, 80vw);
+  text-align: left;
   z-index: 100;
 }
 
@@ -564,8 +568,20 @@ async function returnMe() {
     padding: 0 16px;
   }
 
-  .burger-btn {
-    right: 12px;
+  .burger-btn { right: 36px; }
+  .chat-btn   { left: 16px; }
+
+  .btn-leave, .btn-skip, .btn-return {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+
+  .tooltip {
+    position: fixed;
+    left: 16px; right: 16px;
+    top: 140px; bottom: auto;
+    transform: none;
+    width: auto; max-width: none;
   }
 
   .queue-title {

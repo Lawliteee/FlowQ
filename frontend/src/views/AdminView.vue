@@ -533,8 +533,16 @@ async function finishQueue() {
   }
 
   .chat-btn {
-    display: none;
+    top: auto;
+    left: auto;
+    right: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   }
+
+
 
   .current-text {
     font-size: 30px;
@@ -552,6 +560,33 @@ async function finishQueue() {
     height: auto;
     min-height: calc(100dvh - 80px);
     overflow: visible;
+  }
+
+  .chat-btn {
+    top: auto;
+    left: auto;
+    right: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0;
+  }
+
+  .btn-next {
+    order: -1;
+    padding: 14px 32px;
+  }
+
+  .btn-secondary {
+    position: static;
+    padding: 13px 24px;
   }
 
   /* название на всю строку, время и кнопка копирования - ниже */
@@ -613,18 +648,19 @@ async function finishQueue() {
 
   .actions {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     gap: 10px;
     margin-top: 0;
   }
 
   .btn-next {
     order: -1;
-    padding: 14px 20px;
+    padding: 14px 32px;
   }
 
   .btn-secondary {
-    padding: 13px 20px;
+    position: static;
+    padding: 13px 24px;
   }
 }
 </style>

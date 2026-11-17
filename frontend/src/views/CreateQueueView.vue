@@ -224,7 +224,7 @@ h1 {
   box-shadow: var(--shadow-panel);
   padding: 12px 32px;
   width: 100%;
-  max-width: 700px;
+  max-width: 730px;
 }
 
 .form-row {
@@ -430,7 +430,7 @@ input[type='checkbox'] {
   gap: 16px;
   margin-top: 28px;
   width: 100%;
-  max-width: 700px;
+  max-width: 730px;
   justify-content: center;
 }
 
