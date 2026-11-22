@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -16,6 +17,11 @@ func NewDB() *sql.DB {
 	}
 
 	db, err := sql.Open("pgx", dsn)
+
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
 	if err != nil {
 		log.Fatalf("Ошибка открытия БД: %v", err)
 	}
