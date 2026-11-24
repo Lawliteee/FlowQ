@@ -76,11 +76,13 @@
               :value="skipDuration" @input="skipDuration = digits($event)" :disabled="!skipFeature" />
             <label class="inline-label">мин.</label>
           </div>
-          <label class="checkbox-item">
-            <input type="checkbox" v-model="imFreeFeature" />
-            <span>Функция "Я освободился"</span>
-          </label>
-          <span class="info-icon" title="Пропустить меня - участник временно становится в конец очереди; Я освободился - участники могут без администратора двигать очередь">i</span>
+            <div class="checkbox-with-info">
+              <label class="checkbox-item">
+                <input type="checkbox" v-model="imFreeFeature" />
+                <span>Функция "Я освободился"</span>
+              </label>
+              <span class="info-icon" title="Пропустить меня - участник временно становится в конец очереди; Я освободился - участники могут без администратора двигать очередь">i</span>
+            </div>
         </div>
       </div>
 
@@ -484,6 +486,12 @@ input[type='checkbox'] {
   margin-right: 0px;
 }
 
+.checkbox-with-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 @media (max-width: 768px) {
   main {
     padding: 20px 22px 40px;
@@ -525,7 +533,7 @@ input[type='checkbox'] {
   }
 
   .inline-field {
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .ml {

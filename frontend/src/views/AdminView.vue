@@ -534,15 +534,13 @@ async function finishQueue() {
 
   .chat-btn {
     top: auto;
-    left: auto;
-    right: 20px;
+    left: 20px;
+    right: auto;
     bottom: max(20px, env(safe-area-inset-bottom));
     width: 52px;
     height: 52px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   }
-
-
 
   .current-text {
     font-size: 30px;
@@ -564,8 +562,8 @@ async function finishQueue() {
 
   .chat-btn {
     top: auto;
-    left: auto;
-    right: 20px;
+    left: 20px;
+    right: auto;
     bottom: max(20px, env(safe-area-inset-bottom));
     width: 52px;
     height: 52px;
@@ -589,7 +587,6 @@ async function finishQueue() {
     padding: 13px 24px;
   }
 
-  /* название на всю строку, время и кнопка копирования - ниже */
   .queue-bar {
     flex-wrap: wrap;
     gap: 10px 12px;
@@ -613,7 +610,8 @@ async function finishQueue() {
   }
 
   .btn-copy {
-    width: 100%;
+    width: auto;
+    align-self: flex-start;
   }
 
   .current-block {
